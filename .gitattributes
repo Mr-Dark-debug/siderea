@@ -1,0 +1,6 @@
+# Keep line endings deterministic across Windows and Linux (CI runs on Linux).
+* text=auto eol=lf
+*.bat text eol=crlf
+*.png binary
+*.jpg binary
+*.jar binary
