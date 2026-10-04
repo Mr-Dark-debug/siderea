@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 664 104" width="664" height="104" role="img" aria-labelledby="t">
+  <title id="t">Siderea</title>
+  <g transform="scale(0.20312)">
+    <circle cx="256" cy="256" r="200" fill="none" stroke="#ECE9E3" stroke-width="22"/>
+    <path d="M145.12 296.36 A118 118 0 0 1 358.19 197" fill="none" stroke="#ECE9E3" stroke-width="34" stroke-linecap="round"/>
+    <circle cx="358.19" cy="197" r="32" fill="#F2A93B"/>
+  </g>
+  <g fill="none" stroke="#ECE9E3" stroke-width="8" stroke-linecap="round" stroke-linejoin="round">
+    <path transform="translate(150 2)" d="M54 24 C54 12 44 6 30 6 C16 6 6 13 6 26 C6 39 17 44 30 50 C43 56 54 61 54 74 C54 87 44 94 30 94 C16 94 6 88 6 76"/>
+    <path transform="translate(232 2)" d="M12 6 V94"/>
+    <path transform="translate(278 2)" d="M8 6 V94 H26 C46 94 56 78 56 50 C56 22 46 6 26 6 Z"/>
+    <path transform="translate(362 2)" d="M50 6 H8 V94 H50 M8 50 H42"/>
+    <path transform="translate(440 2)" d="M8 94 V6 H30 C46 6 54 14 54 28 C54 42 46 50 30 50 H8 M30 50 L54 94"/>
+    <path transform="translate(522 2)" d="M50 6 H8 V94 H50 M8 50 H42"/>
+    <path transform="translate(600 2)" d="M4 94 L30 6 L56 94 M15 64 H45"/>
+  </g>
+</svg>
