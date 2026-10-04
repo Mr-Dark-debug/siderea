@@ -1,0 +1,32 @@
+# Gradle / build output
+.gradle/
+build/
+!gradle/wrapper/gradle-wrapper.jar
+.kotlin/
+*.apk
+*.aab
+*.ap_
+*.dex
+captures/
+.externalNativeBuild/
+.cxx/
+
+# Local config
+local.properties
+.idea/
+*.iml
+.vscode/
+.DS_Store
+Thumbs.db
+
+# Signing: NEVER commit keystores or secrets
+*.jks
+*.keystore
+*.p12
+keystore.properties
+signing.properties
+*.pem
+
+# Reports produced by the app and by tooling
+/report/
+/reports/
