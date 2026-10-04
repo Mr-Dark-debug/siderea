@@ -1,0 +1,37 @@
+name: Device report
+description: Share what your phone's cameras report (the most useful thing you can send)
+title: "[device] <phone model>"
+labels: [device-report]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Open **Capability Inspector** in Siderea, tap **Share report** (or **Copy as JSON**) and attach the
+        file below. The report contains your phone model, Android version and camera capabilities. It contains
+        no photos, location or account information.
+  - type: input
+    id: device
+    attributes:
+      label: Phone model and Android version
+      placeholder: Pixel 9 Pro, Android 16
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Siderea version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: report
+    attributes:
+      label: Capability report (JSON)
+      description: Drag the `.json` file here, or paste the JSON.
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything that looked wrong
+      description: For example "my 5x lens is missing" or "longest shutter should be 30 s".

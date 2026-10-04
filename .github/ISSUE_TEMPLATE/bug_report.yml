@@ -1,0 +1,41 @@
+name: Bug report
+description: Something doesn't work as described
+labels: [bug]
+body:
+  - type: input
+    id: device
+    attributes:
+      label: Phone model and Android version
+      placeholder: Pixel 9 Pro, Android 16
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Siderea version
+      description: Settings → About → Version
+      placeholder: 0.1.0
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open …
+        2. Tap …
+  - type: textarea
+    id: report
+    attributes:
+      label: Capability report
+      description: Capability Inspector → Share report, then attach the file. Strongly recommended for anything camera-related.

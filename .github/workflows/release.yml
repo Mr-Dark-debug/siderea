@@ -1,0 +1,96 @@
+name: Release
+
+# Push a tag like v0.1.0 to build an APK and publish a GitHub Release.
+#
+# With the four signing secrets set (see docs/RELEASING.md) the APK is signed with the release key.
+# Without them, the APK is signed with the debug key and is clearly labelled "debug-signed" in both the
+# file name and the release notes. Switching later from debug to release signing means uninstalling first,
+# because Android refuses to update an app signed with a different key.
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build and publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Install Android platform
+        run: |
+          yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" "platforms;android-37.0"
+
+      - name: Resolve version and release notes
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          echo "VERSION=$version" >> "$GITHUB_ENV"
+          bash scripts/release-notes.sh "$version" > "$RUNNER_TEMP/notes.md"
+
+      - name: Prepare signing key (if configured)
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASSWORD" ]; then
+            echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/siderea-release.jks"
+            {
+              echo "SIDEREA_KEYSTORE_FILE=$RUNNER_TEMP/siderea-release.jks"
+              echo "SIDEREA_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
+              echo "SIDEREA_KEY_ALIAS=$KEY_ALIAS"
+              echo "SIDEREA_KEY_PASSWORD=$KEY_PASSWORD"
+              echo "SIGNED=release"
+            } >> "$GITHUB_ENV"
+          else
+            echo "SIGNED=debug" >> "$GITHUB_ENV"
+            echo "::warning::Signing secrets are not set; publishing a debug-signed APK."
+          fi
+
+      - name: Verify and build
+        run: >
+          ./gradlew qualityCheck testDebugUnitTest lint assembleRelease
+          -Psiderea.versionName="$VERSION" --stacktrace --console=plain
+
+      - name: Name the APK and write notes
+        run: |
+          src=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          if [ "$SIGNED" = "release" ]; then
+            name="siderea-v${VERSION}.apk"
+            banner=""
+          else
+            name="siderea-v${VERSION}-debug-signed.apk"
+            banner="> **Debug-signed build.** Installable for testing, but signed with the debug key rather than a release key. When a release-signed build is published you will need to uninstall this one first."
+          fi
+          cp "$src" "$name"
+          sha256sum "$name" > "$name.sha256"
+          {
+            [ -n "$banner" ] && printf '%s\n\n' "$banner"
+            cat "$RUNNER_TEMP/notes.md"
+            printf '\n---\nSHA-256: `%s`\n' "$(cut -d' ' -f1 "$name.sha256")"
+          } > "$RUNNER_TEMP/release-body.md"
+          echo "APK_NAME=$name" >> "$GITHUB_ENV"
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" \
+            "$APK_NAME" "$APK_NAME.sha256" \
+            --title "Siderea $GITHUB_REF_NAME" \
+            --notes-file "$RUNNER_TEMP/release-body.md" \
+            --verify-tag
