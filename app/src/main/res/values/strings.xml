@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Siderea</string>
+    <string name="app_tagline">Manual camera for the night sky</string>
+
+    <!-- Common -->
+    <string name="action_back">Back</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_retry">Try again</string>
+
+    <!-- Home -->
+    <string name="home_snapshot_label">This phone</string>
+    <string name="home_reading">Reading your cameras…</string>
+    <string name="home_failed_title">Couldn\'t read the cameras</string>
+    <string name="home_headline_cameras">%1$d cameras</string>
+    <string name="home_headline_camera_one">1 camera</string>
+    <string name="home_manual_yes">Manual controls available</string>
+    <string name="home_manual_no">No manual sensor control on the main camera</string>
+    <string name="home_stat_shutter">Longest shutter</string>
+    <string name="home_stat_iso">ISO</string>
+    <string name="home_stat_raw">RAW</string>
+    <string name="home_yes">YES</string>
+    <string name="home_no">NO</string>
+    <string name="home_modes_label">Modes</string>
+    <string name="home_mode_coming">Not built yet · arrives in %1$s</string>
+    <string name="mode_photo">Photo</string>
+    <string name="mode_timelapse">Timelapse</string>
+    <string name="mode_astro">Astro</string>
+    <string name="mode_long_exposure">Long exposure</string>
+    <string name="home_open_inspector">Open Capability Inspector</string>
+
+    <!-- Inspector -->
+    <string name="inspector_title">Capability Inspector</string>
+    <string name="inspector_copy_json">Copy as JSON</string>
+    <string name="inspector_share">Share report</string>
+    <string name="inspector_refresh">Refresh</string>
+    <string name="inspector_copied">Report copied to the clipboard</string>
+    <string name="inspector_share_chooser">Share capability report</string>
+    <string name="inspector_share_failed">Couldn\'t prepare the report for sharing. Try Copy as JSON instead.</string>
+    <string name="inspector_loading">Reading every camera on this phone…</string>
+    <string name="inspector_device">Device</string>
+    <string name="inspector_cameras">Cameras</string>
+    <string name="inspector_read_errors">Read problems</string>
+    <string name="inspector_features">What Siderea can do on this lens</string>
+    <string name="inspector_expand">Show details for %1$s</string>
+    <string name="inspector_collapse">Hide details for %1$s</string>
+    <string name="inspector_status_supported">YES</string>
+    <string name="inspector_status_limited">LIMITED</string>
+    <string name="inspector_status_unsupported">NO</string>
+    <string name="inspector_share_subject">Siderea capability report</string>
+
+    <!-- Settings -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_display">Display</string>
+    <string name="settings_red_mode">Red night-vision mode</string>
+    <string name="settings_red_mode_hint">Tints the whole app red so your eyes stay dark-adapted.</string>
+    <string name="settings_haptics">Haptic feedback</string>
+    <string name="settings_haptics_hint">Detents and confirmations on controls.</string>
+    <string name="settings_tools">Tools</string>
+    <string name="settings_open_inspector">Capability Inspector</string>
+    <string name="settings_open_inspector_hint">What each camera on this phone can really do.</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_reset">Reset settings</string>
+    <string name="settings_reset_hint">Restores every setting to its default. Nothing you captured is touched.</string>
+    <string name="settings_about">About</string>
+    <string name="settings_version">Version</string>
+    <string name="settings_license">License</string>
+    <string name="settings_license_value">Apache License 2.0</string>
+    <string name="settings_source">Source code</string>
+    <string name="settings_source_value">github.com/Mr-Dark-debug/siderea</string>
+    <string name="settings_licenses">Open-source licenses</string>
+    <string name="settings_open_link_failed">No app can open this link on your phone.</string>
+    <string name="settings_more_coming">More settings (storage, formats, GPS, filenames) arrive together with the features that use them.</string>
+
+    <!-- Licenses -->
+    <string name="licenses_title">Open-source licenses</string>
+</resources>

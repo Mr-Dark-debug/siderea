@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="siderea_black">#FF000000</color>
+    <color name="siderea_icon_background">#FF07070A</color>
+    <color name="siderea_icon_ring">#FFECE9E3</color>
+    <color name="siderea_icon_star">#FFF2A93B</color>
+</resources>
