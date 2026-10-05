@@ -14,24 +14,30 @@ wrong-package or differently signed file never reaches the installer. Installati
 "Allow from this source" permission and the user's final approval. Cancelling does not uninstall Siderea.
 Reopening the app restores a verified pending download; obsolete APKs are cleaned after replacement.
 
-## Signing and the v1.0.0 migration
+## Signing and the one-time migration
 
 The public v1.0.0 APK used an ephemeral GitHub Actions debug key. Its certificate SHA-256 is
 `34f7ab4b13684fb781406991c4bb157207b5db1acbaefed8c5d54a21979d7e8b`.
 Only the APK, not its private signing key, was retained in the available artifacts. Android requires the
 old private key to produce a compatible update; changing version numbers cannot bypass this.
 
-From v1.1.0 the debug key is persistent, held outside Git and in the repository's `DEBUG_KEYSTORE_BASE64`
+The initial v1.1.0 CI APK also used a different key despite the key being configured. Its certificate was
+`7eaa4be14445608315d24b6f1c6db8a832c4234459f48c3b138b98f42ad4550e`.
+End-to-end verification caught this and the updater rejected that APK. v1.1.0 is marked prerelease.
+
+From v1.1.1 the debug key is persistent, held outside Git and in the repository's `DEBUG_KEYSTORE_BASE64`
 Actions secret. Its certificate SHA-256 is
 `f11e976967911c8e585dd88817d6587076a802840699eebf7e3c8304bedbe3b5`.
-CI refuses to publish with a newly generated key. Back up the existing key before changing machines.
+Gradle receives the exact keystore path. CI compares the APK's certificate with the configured key and
+refuses publication on a mismatch. Back up the existing key before changing machines.
 Release signing secrets take precedence when configured; a key switch still needs a migration.
 
-If Android says v1.1.0 conflicts with v1.0.0, **export your sessions as ZIPs first**, then reinstall manually.
+If Android says v1.1.1 conflicts with v1.0.0 or the initial v1.1.0, **export your sessions as ZIPs first**,
+then reinstall manually.
 Uninstalling removes private sessions and preferences. Shared photos in `Pictures/Siderea` remain on disk,
 but Android may no longer attribute the old images to the reinstalled app: view them in the system gallery.
 The in-app gallery intentionally requests no access to other apps' images. If your installed build already
-uses the persistent local key, installing v1.1.0 over it preserves data. Subsequent releases signed with this
+uses the persistent local key, installing v1.1.1 over it preserves data. Subsequent releases signed with this
 key can use the in-app updater.
 
 ## Research
@@ -48,5 +54,5 @@ Focused emulator checks: GalleryFlowTest, UpdateIntegrityTest, SideriaSmokeTest 
 For the complete production updater, build an isolated lower-version fixture from the same source and key
 (`-Psiderea.versionName=1.0.99`), install it on a disposable emulator, capture a photo and change a preference.
 Open the published GitHub update through Settings; approve Android's source permission and installation.
-After restart verify version 1.1.0, retained photo/preference/session data and obsolete installer cleanup.
+After restart verify version 1.1.1, retained photo/preference/session data and obsolete installer cleanup.
 The lower-version fixture is test setup, not evidence that the old differently signed v1.0.0 can be replaced.

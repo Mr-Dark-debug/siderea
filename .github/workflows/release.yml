@@ -57,10 +57,14 @@ jobs:
               echo "SIDEREA_KEY_PASSWORD=$KEY_PASSWORD"
               echo "SIGNED=release"
             } >> "$GITHUB_ENV"
+            expected=$(keytool -exportcert -keystore "$RUNNER_TEMP/siderea-release.jks" -storepass "$KEYSTORE_PASSWORD" -alias "$KEY_ALIAS" | sha256sum | cut -d' ' -f1)
+            echo "EXPECTED_SIGNER=$expected" >> "$GITHUB_ENV"
           elif [ -n "$DEBUG_KEYSTORE_BASE64" ]; then
-            mkdir -p "$HOME/.android"
-            echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > "$HOME/.android/debug.keystore"
+            echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/siderea-debug.jks"
+            echo "SIDEREA_DEBUG_KEYSTORE_FILE=$RUNNER_TEMP/siderea-debug.jks" >> "$GITHUB_ENV"
             echo "SIGNED=debug" >> "$GITHUB_ENV"
+            expected=$(keytool -exportcert -keystore "$RUNNER_TEMP/siderea-debug.jks" -storepass android -alias AndroidDebugKey | sha256sum | cut -d' ' -f1)
+            echo "EXPECTED_SIGNER=$expected" >> "$GITHUB_ENV"
             echo "::warning::Publishing with the persistent debug key. Keep this key for future updates."
           else
             echo "::error::Set a persistent release key or DEBUG_KEYSTORE_BASE64 before publishing."
@@ -75,12 +79,18 @@ jobs:
       - name: Name the APK and write notes
         run: |
           src=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          apksigner=$(find "$ANDROID_HOME/build-tools" -name apksigner | sort -V | tail -1)
+          actual=$("$apksigner" verify --print-certs "$src" | sed -n 's/.*certificate SHA-256 digest: //p' | head -1)
+          if [ "$actual" != "$EXPECTED_SIGNER" ]; then
+            echo "::error::APK certificate does not match the configured keystore. Refusing publication."
+            exit 1
+          fi
           if [ "$SIGNED" = "release" ]; then
             name="siderea-v${VERSION}.apk"
             banner=""
           else
             name="siderea-v${VERSION}-debug-signed.apk"
-            banner="> **Debug-signed build.** Uses a persistent key for updates from v1.1 onward. The v1.0.0 public APK used a different key: export private sessions before the one-time reinstall. Shared photos stay in Pictures/Siderea."
+            banner="> **Debug-signed build.** Uses a persistent key from v1.1.1 onward. The v1.0.0 and initial v1.1.0 public APKs used different keys: export private sessions before the one-time reinstall. Shared photos stay in Pictures/Siderea."
           fi
           cp "$src" "$name"
           sha256sum "$name" > "$name.sha256"

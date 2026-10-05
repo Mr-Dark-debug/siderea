@@ -1,4 +1,4 @@
-# Siderea 1.1.0 validation
+# Siderea 1.1.1 validation
 
 Checked on 2026-10-05 with JDK 21, the Android API 36 emulator and the project's pinned dependencies.
 This is emulator evidence. Real camera hardware, RAW decoders, OEM battery policies and OEM installers
@@ -36,7 +36,10 @@ published-APK replacement is claimed by this pre-publication report.
 The locally verified release certificate SHA-256 is
 `f11e976967911c8e585dd88817d6587076a802840699eebf7e3c8304bedbe3b5`.
 The same persistent debug keystore is configured in the repository's Actions secret. The public v1.0.0
-certificate differs: see [the migration instructions](UPDATES.md). A lower-version same-key fixture
+and initial v1.1.0 certificates differ: see [the migration instructions](UPDATES.md). The initial v1.1.0
+published-APK check found that CI had not used the persistent key; its automatic download was rejected.
+v1.1.1 sets the exact key path and verifies the built certificate before publication.
+A lower-version same-key fixture
 cannot demonstrate compatibility with that old public APK.
 
 Screenshots in README come from the actual emulator UI, without replacement photography or mock screens.

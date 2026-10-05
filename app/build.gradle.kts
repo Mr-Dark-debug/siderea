@@ -33,6 +33,12 @@ android {
     val releaseKeystore = System.getenv("SIDEREA_KEYSTORE_FILE")
     val hasReleaseKey = !releaseKeystore.isNullOrBlank() && file(releaseKeystore).exists()
     signingConfigs {
+        val persistentDebugKey = System.getenv("SIDEREA_DEBUG_KEYSTORE_FILE")
+        if (!persistentDebugKey.isNullOrBlank()) {
+            getByName("debug") {
+                storeFile = file(persistentDebugKey)
+            }
+        }
         if (hasReleaseKey) {
             create("release") {
                 storeFile = file(releaseKeystore!!)

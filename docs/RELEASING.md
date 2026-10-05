@@ -17,6 +17,11 @@ the APK `siderea-vX.Y.Z-debug-signed.apk`, with a banner in the release notes. I
 release key configuration nor a persistent debug key is available. Never generate a new key for each release.
 See [UPDATES.md](UPDATES.md) for the v1.0.0 migration and updater verification.
 
+The workflow writes the persistent debug key into a temporary file and passes its exact path through
+`SIDEREA_DEBUG_KEYSTORE_FILE`; Gradle does not rely on a runner's default debug-keystore location.
+Before publication, CI checks that the APK certificate equals the certificate exported from the configured
+keystore. A mismatch fails the job. v1.1.0's initial APK exposed the need for this guard; use v1.1.1.
+
 Android refuses to update an app that is signed with a different key. So once you add a release key, the first
 release-signed build has to be installed after **uninstalling** any debug-signed one.
 
