@@ -23,6 +23,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import io.github.mrdarkdebug.siderea.core.capture.session.SessionKind
+import io.github.mrdarkdebug.siderea.core.processing.BulbMode
 import io.github.mrdarkdebug.siderea.core.ui.components.ChipButton
 import io.github.mrdarkdebug.siderea.core.ui.components.PillButton
 import io.github.mrdarkdebug.siderea.core.ui.components.PillStyle
@@ -46,28 +48,68 @@ internal fun AstroSection(
     onDarks: () -> Unit,
 ) {
     val busy = state is ExportState.Working
+    val bulb = detail.manifest.kind == SessionKind.LONG_EXPOSURE
     Column(verticalArrangement = Arrangement.spacedBy(SideriaSpacing.sm)) {
-        SectionLabel("Sky")
+        SectionLabel(if (bulb) "Long exposure" else "Sky")
         Text(
-            "Star trails, or an aligned stack that averages the noise away. " +
-                "Dark frames (taken with the lens covered) remove hot pixels and sensor glow.",
+            if (bulb) {
+                "Adds the frames together like one long exposure, keeps the brightest light, or averages them."
+            } else {
+                "Star trails, or an aligned stack that averages the noise away. " +
+                    "Dark frames (taken with the lens covered) remove hot pixels and sensor glow."
+            },
             style = Siderea.text.caption,
             color = Siderea.palette.onSurfaceMuted,
         )
         Row(horizontalArrangement = Arrangement.spacedBy(SideriaSpacing.sm)) {
             PillButton(
-                "Trails / stack",
+                if (bulb) "Combine frames" else "Trails / stack",
                 onProcess,
                 style = PillStyle.Filled,
                 enabled = !busy,
                 modifier = Modifier.weight(1f),
             )
-            PillButton(
-                if (detail.darkFrames > 0) "Darks (${detail.darkFrames})" else "Take darks",
-                onDarks,
-                style = PillStyle.Subtle,
-                modifier = Modifier.weight(1f),
-            )
+            if (!bulb) {
+                PillButton(
+                    if (detail.darkFrames > 0) "Darks (${detail.darkFrames})" else "Take darks",
+                    onDarks,
+                    style = PillStyle.Subtle,
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+    }
+}
+
+/** Choose how the frames of a virtual bulb are combined. */
+@Composable
+internal fun BulbDialog(
+    detail: SessionDetail,
+    onDismiss: () -> Unit,
+    onStart: (BulbMode) -> Unit,
+) {
+    var mode by remember { mutableStateOf(BulbMode.ADDITIVE) }
+    Sheet(onDismiss) {
+        Text("COMBINE FRAMES", style = Siderea.text.caption, color = Siderea.palette.onSurfaceMuted)
+        Spacer(Modifier.height(SideriaSpacing.sm))
+        Row(
+            Modifier.horizontalScroll(rememberScrollState()),
+            horizontalArrangement = Arrangement.spacedBy(SideriaSpacing.xs),
+        ) {
+            BulbMode.entries.forEach { ChipButton(it.label.uppercase(), { mode = it }, selected = it == mode) }
+        }
+        Spacer(Modifier.height(SideriaSpacing.xs))
+        Text(mode.description, style = Siderea.text.readoutSmall, color = Siderea.palette.onBackground)
+        Spacer(Modifier.height(SideriaSpacing.sm))
+        Text(
+            "Uses ${detail.jpegFrames} frames. Saves a JPEG and a TIFF.",
+            style = Siderea.text.caption,
+            color = Siderea.palette.onSurfaceMuted,
+        )
+        Spacer(Modifier.height(SideriaSpacing.md))
+        Row(horizontalArrangement = Arrangement.spacedBy(SideriaSpacing.sm)) {
+            PillButton("Cancel", onDismiss, style = PillStyle.Subtle, modifier = Modifier.weight(1f))
+            PillButton("Start", { onStart(mode) }, style = PillStyle.Filled, modifier = Modifier.weight(1f))
         }
     }
 }

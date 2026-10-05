@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mrdarkdebug.siderea.core.camera.capability.CameraFormat
+import io.github.mrdarkdebug.siderea.core.capture.session.SessionKind
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionStatus
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionSummary
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.IntervalMath
@@ -276,9 +277,16 @@ fun SessionDetailScreen(
             }
         }
         if (astroDialog && d != null) {
-            AstroDialog(d, { astroDialog = false }) { mode, darks, brighten ->
-                astroDialog = false
-                viewModel.exportAstro(id, mode, darks, brighten)
+            if (d.manifest.kind == SessionKind.LONG_EXPOSURE) {
+                BulbDialog(d, { astroDialog = false }) { mode ->
+                    astroDialog = false
+                    viewModel.exportBulb(id, mode)
+                }
+            } else {
+                AstroDialog(d, { astroDialog = false }) { mode, darks, brighten ->
+                    astroDialog = false
+                    viewModel.exportAstro(id, mode, darks, brighten)
+                }
             }
         }
         if (darkDialog && d != null) {

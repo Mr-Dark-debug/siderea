@@ -154,6 +154,13 @@ M0 notes was to benchmark Kotlin against C++/NDK and a GPU path before choosing:
 and is timed (`ProcessingBenchmarkTest`); no alternative was built, so the choice is "Kotlin, because it is correct
 and simple and the interface allows replacement", not "Kotlin, because it won".
 
+### Virtual bulb (M5)
+`AdditiveAccumulator` sums frames in linear light (`TO_LINEAR` table, 2.2 gamma) in float and encodes back through a
+4096-entry table; `protectingGain()` picks the gain that keeps the top 0.2 % of values at or under white. Lighten
+and average reuse `TrailAccumulator` and `StackAccumulator`. `VirtualBulbProcessor.combine` is a thin dispatcher
+over the same streaming interface as the sky tools. On the capture side a bulb is a session of kind
+`LONG_EXPOSURE` using the timelapse runner with `interval = max(exposure, exposure + save time)`.
+
 ### Settings
 Jetpack DataStore (Preferences) behind `SettingsRepository`. Host unit tests use an in-memory `DataStore`
 because DataStore's file replacement uses `File.renameTo`, which fails on Windows hosts when the target

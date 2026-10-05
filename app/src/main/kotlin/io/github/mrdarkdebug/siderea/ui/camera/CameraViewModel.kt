@@ -32,6 +32,7 @@ import io.github.mrdarkdebug.siderea.core.camera.engine.OpenParams
 import io.github.mrdarkdebug.siderea.core.camera.engine.RequestPlanner
 import io.github.mrdarkdebug.siderea.core.camera.engine.StillRequest
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionKind
+import io.github.mrdarkdebug.siderea.core.capture.session.StopCondition
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.OverheadEstimate
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.Preflight
 import io.github.mrdarkdebug.siderea.core.data.settings.CameraStateRepository
@@ -403,10 +404,34 @@ class CameraViewModel
                 when (mode) {
                     CameraMode.TIMELAPSE -> ControlPanel.TIMELAPSE
                     CameraMode.ASTRO -> ControlPanel.ASTRO
+                    CameraMode.LONG_EXPOSURE -> ControlPanel.BULB
                     else -> null
                 }
             mutableState.update { it.copy(mode = mode, panel = panel) }
             if (panel != null) refreshOverhead()
+            if (mode == CameraMode.ASTRO || mode == CameraMode.LONG_EXPOSURE) preferLongExposure(mode)
+        }
+
+        /**
+         * Sky and long-exposure sessions need long, manual frames. If the person has not chosen a manual exposure
+         * yet and the lens can do one, start from a sensible one (they can change it with SS and ISO).
+         */
+        private fun preferLongExposure(mode: CameraMode) {
+            val limits = mutableState.value.limits ?: return
+            if (!limits.manualExposure || mutableState.value.settings.exposureMode != ExposureMode.AUTO) return
+            val shutter =
+                minOf(
+                    limits.shutterMaxNs,
+                    if (mode ==
+                        CameraMode.ASTRO
+                    ) {
+                        ASTRO_SHUTTER_NS
+                    } else {
+                        BULB_SHUTTER_NS
+                    },
+                )
+            val iso = if (mode == CameraMode.ASTRO) ASTRO_ISO else limits.isoMin
+            update { it.copy(exposureMode = ExposureMode.MANUAL, shutterNs = shutter, iso = iso) }
         }
 
         fun dismissMessage() {
@@ -731,7 +756,12 @@ class CameraViewModel
                     shutterNs = s.effectiveShutterNs,
                     iso = s.effectiveIso,
                     orientation = orientation,
-                    kind = if (s.mode == CameraMode.ASTRO) SessionKind.ASTRO else SessionKind.TIMELAPSE,
+                    kind =
+                        when (s.mode) {
+                            CameraMode.ASTRO -> SessionKind.ASTRO
+                            CameraMode.LONG_EXPOSURE -> SessionKind.LONG_EXPOSURE
+                            else -> SessionKind.TIMELAPSE
+                        },
                 )
             mutableState.update { it.copy(preflight = null, panel = null) }
             timelapse.start(request)
@@ -742,7 +772,16 @@ class CameraViewModel
          * exposure plus a short gap, and the exposure is always locked.
          */
         private fun setupFor(s: CameraUiState): TimelapseSetup =
-            if (s.mode == CameraMode.ASTRO) {
+            if (s.mode == CameraMode.LONG_EXPOSURE) {
+                val seconds = s.timelapse.bulbSeconds
+                s.timelapse.copy(
+                    intervalMs = astroIntervalMs(s.effectiveShutterNs, 0L, s.overhead),
+                    stop = if (seconds == null) StopCondition.UNTIL_STOPPED else StopCondition.FRAME_COUNT,
+                    frameCount = seconds?.let { bulbFrames(it, s.effectiveShutterNs) } ?: s.timelapse.frameCount,
+                    lockExposure = true,
+                    customInterval = true,
+                )
+            } else if (s.mode == CameraMode.ASTRO) {
                 s.timelapse.copy(
                     intervalMs =
                         astroIntervalMs(s.effectiveShutterNs, s.timelapse.astroGapMs, s.overhead),
@@ -826,6 +865,9 @@ class CameraViewModel
         private companion object {
             const val PORTRAIT_SENSOR_ORIENTATION = 90
             const val NS_PER_MS = 1_000_000L
+            const val ASTRO_SHUTTER_NS = 15_000_000_000L
+            const val BULB_SHUTTER_NS = 5_000_000_000L
+            const val ASTRO_ISO = 1_600
             const val STATUS_INTERVAL_MS = 20_000L
             const val AE_INTERVAL_MS = 350L
             const val ONE_SECOND_MS = 1_000L

@@ -4,6 +4,49 @@ All notable changes are recorded here. Each milestone lists **what works**, **wh
 real device**, and **known issues**. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.6.0] - 2026-10-05
+
+**Milestone M5: Virtual Bulb.** The LONG EXPOSURE mode is real: a long exposure assembled from many short ones.
+
+### What works
+- **Long exposure mode** on the mode strip. Choose a total time (30 s, 1, 2, 5, 10, 30 min, 1 h) or **BULB**
+  (until you press stop). The length of each frame comes from the SS and ISO controls; the panel shows how many
+  frames that makes, how long it takes on the clock, and warns when frames are so short the count would be absurd,
+  or when the camera has no manual shutter at all (as on the emulator).
+- **Sensible start**: entering Long exposure or Astro on a lens with manual exposure switches an automatic
+  exposure to manual (5 s at the lowest ISO for a bulb, 15 s at ISO 1600 for the sky) so you start from a long
+  frame rather than 1/120 s.
+- **Same engine as timelapse**: foreground service, wake lock, guards, pre-flight and resume. The interval is
+  the exposure plus whatever the phone needs to save the frame, never less.
+- **Combine frames** from the session screen:
+  - **Add light**: sums the frames in **linear light** (a plain 2.2 gamma undoes the JPEG tone curve), so ten equal
+    frames look like ten times the exposure, not like ten times the encoded value. An automatic gain keeps the
+    brightest 0.2 % from clipping.
+  - **Keep brightest**: per-pixel maximum, for light painting and moving lights.
+  - **Average**: removes anything that was only there briefly (people, traffic) and cleans up noise.
+  The result is a JPEG plus a TIFF, saved to the gallery on request.
+
+### Verified
+- 291 host unit tests (adds linear-light addition against the formula, clipping vs the protecting gain, lighten
+  keeping every moving light, average removing a brief intruder, mismatched and unreadable frames, cancellation,
+  and the frame-count and interval maths).
+- 48 emulator tests on Android 16 (adds a UI test that runs a bulb session until stopped and combines it all three
+  ways, and a smoke test that every mode on the strip opens its own panel).
+- ktlint, detekt, Android lint and an R8 release build are clean.
+
+### Untested on a real device
+- A real 16 s frame sequence on a Pixel: the gaps between frames, how the combined result compares with a true
+  long exposure, and heat over a long run.
+- Whether the plain 2.2 gamma is close enough to a phone's real tone curve; RAW (DNG) frames would be exact but are
+  not decoded yet.
+
+### Known issues
+- The frames are separated by the save time (about a second), so a light moving fast can show tiny breaks in
+  *Add light* and *Keep brightest*. This is inherent to stacking short exposures.
+- A bulb is built from JPEG frames only.
+- No live preview of the accumulating exposure while it runs; open the session afterwards.
+- The exposure ramp and the final accessibility polish are still to come.
+
 ## [0.5.0] - 2026-10-05
 
 **Milestone M4: astro.** Astro mode captures a sky session; the session screen turns it into star trails or an

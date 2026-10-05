@@ -68,10 +68,17 @@ make red builds meaningless. Run them before every release.
 * `ProcessingBenchmarkTest`: times decode, star detection, alignment, warped and direct stacking, trails and the
   16-bit TIFF on large frames and logs them (`adb logcat -s SideriaBench`). Run it on a real phone and send the
   line.
+* `LongExposureFlowTest`: through the real UI: Long exposure mode, a bulb run until stopped, then Add light, Keep
+  brightest and Average from the session screen (JPEG and TIFF written for each).
 * `CameraCapabilityReaderInstrumentedTest`: the real reader against whatever cameras the target has;
   consistency checks (unique ids, physical cameras point back to a logical parent, ranges agree with
   capabilities, one `1x` lens per facing, API 36 keys only on API 36, verdicts never over-claim, JSON
   round-trip on device).
+
+The UI classes (`SideriaSmokeTest`, `TimelapseFlowTest`, `AstroFlowTest`, `LongExposureFlowTest`) use a `RetryRule`
+that runs a failed test once more. The emulator's software GPU slows down over a long run until Compose reports
+"not idle", which fails tests that pass alone and on a freshly booted emulator; every failed attempt is still
+printed. Cold-boot the emulator and set the animation scales to 0 before a full run (about 25 minutes).
 
 Result at v0.1.0: see [CHANGELOG.md](../CHANGELOG.md) for which API levels this was actually run on.
 

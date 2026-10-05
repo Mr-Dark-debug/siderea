@@ -35,9 +35,12 @@ import org.junit.Test
 @OptIn(ExperimentalTestApi::class)
 class SideriaSmokeTest {
     @get:Rule(order = 0)
-    val permission: GrantPermissionRule = GrantPermissionRule.grant(Manifest.permission.CAMERA)
+    val retry = RetryRule()
 
     @get:Rule(order = 1)
+    val permission: GrantPermissionRule = GrantPermissionRule.grant(Manifest.permission.CAMERA)
+
+    @get:Rule(order = 2)
     val rule = createAndroidComposeRule<MainActivity>()
 
     private val context = ApplicationProvider.getApplicationContext<Context>()
@@ -64,10 +67,14 @@ class SideriaSmokeTest {
     }
 
     @Test
-    fun modesThatAreNotBuiltYetSaySoInsteadOfPretending() {
+    fun everyModeOnTheStripOpensItsOwnPanel() {
         waitForCamera()
         rule.onNodeWithText("LONG EXPOSURE").performClick()
-        rule.waitUntilAtLeastOneExists(hasText("isn't built yet", substring = true), 10_000)
+        rule.waitUntilAtLeastOneExists(hasText("TOTAL EXPOSURE"), 10_000)
+        rule.onNodeWithText("ASTRO").performClick()
+        rule.waitUntilAtLeastOneExists(hasText("GAP BETWEEN FRAMES"), 10_000)
+        rule.onNodeWithText("TIMELAPSE").performClick()
+        rule.waitUntilAtLeastOneExists(hasText("INTERVAL"), 10_000)
     }
 
     @Test

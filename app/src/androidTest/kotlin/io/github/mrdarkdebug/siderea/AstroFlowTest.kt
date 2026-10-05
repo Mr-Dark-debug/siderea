@@ -34,13 +34,16 @@ import java.io.File
 @OptIn(ExperimentalTestApi::class)
 class AstroFlowTest {
     @get:Rule(order = 0)
+    val retry = RetryRule()
+
+    @get:Rule(order = 1)
     val permissions: GrantPermissionRule =
         GrantPermissionRule.grant(
             Manifest.permission.CAMERA,
             *(if (Build.VERSION.SDK_INT >= 33) arrayOf(Manifest.permission.POST_NOTIFICATIONS) else emptyArray()),
         )
 
-    @get:Rule(order = 1)
+    @get:Rule(order = 2)
     val rule = createAndroidComposeRule<MainActivity>()
 
     private val context = ApplicationProvider.getApplicationContext<Context>()

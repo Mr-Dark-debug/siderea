@@ -115,6 +115,7 @@ fun ControlPanelSheet(
             panel == ControlPanel.AIDS -> AidsPanel(state.aids, actions)
             panel == ControlPanel.TIMELAPSE -> TimelapsePanel(state, actions)
             panel == ControlPanel.ASTRO -> AstroPanel(state, actions)
+            panel == ControlPanel.BULB -> BulbPanel(state, actions)
             limits == null -> Hint("Reading this lens…")
             panel == ControlPanel.SHUTTER -> ShutterPanel(state, limits, actions)
             panel == ControlPanel.ISO -> IsoPanel(state, limits, actions)
@@ -137,6 +138,7 @@ private fun panelTitle(panel: ControlPanel) =
         ControlPanel.AIDS -> "VIEWFINDER AIDS"
         ControlPanel.TIMELAPSE -> "TIMELAPSE"
         ControlPanel.ASTRO -> "ASTRO"
+        ControlPanel.BULB -> "VIRTUAL BULB"
     }
 
 @Composable

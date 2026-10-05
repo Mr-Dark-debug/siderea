@@ -16,6 +16,7 @@ import io.github.mrdarkdebug.siderea.core.export.PixelSize
 import io.github.mrdarkdebug.siderea.core.export.VideoCodec
 import io.github.mrdarkdebug.siderea.core.export.VideoEncoders
 import io.github.mrdarkdebug.siderea.core.export.VideoSpec
+import io.github.mrdarkdebug.siderea.core.processing.BulbMode
 import io.github.mrdarkdebug.siderea.export.AstroMode
 import io.github.mrdarkdebug.siderea.export.ExportCoordinator
 import io.github.mrdarkdebug.siderea.export.ExportState
@@ -124,6 +125,11 @@ class SessionsViewModel
             id: String,
             frameName: String,
         ) = exports.startTiff(id, frameName)
+
+        fun exportBulb(
+            id: String,
+            mode: BulbMode,
+        ) = exports.startBulb(id, mode)
 
         fun exportAstro(
             id: String,

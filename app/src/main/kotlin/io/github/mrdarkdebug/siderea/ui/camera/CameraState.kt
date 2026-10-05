@@ -25,17 +25,17 @@ enum class CameraMode(
     PHOTO("PHOTO", null),
     TIMELAPSE("TIMELAPSE", null),
     ASTRO("ASTRO", null),
-    LONG_EXPOSURE("LONG EXPOSURE", "v0.6.0"),
+    LONG_EXPOSURE("LONG EXPOSURE", null),
     ;
 
     /** Modes that run a scheduled session in the foreground service instead of taking one photo. */
-    val runsSessions: Boolean get() = this == TIMELAPSE || this == ASTRO
+    val runsSessions: Boolean get() = this == TIMELAPSE || this == ASTRO || this == LONG_EXPOSURE
 }
 
 enum class GridMode { OFF, THIRDS, CENTER }
 
 /** The controls that open a panel above the shutter. */
-enum class ControlPanel { SHUTTER, ISO, EV, FOCUS, WB, AIDS, TIMELAPSE, ASTRO }
+enum class ControlPanel { SHUTTER, ISO, EV, FOCUS, WB, AIDS, TIMELAPSE, ASTRO, BULB }
 
 @Serializable
 data class Aids(
@@ -64,6 +64,8 @@ data class TimelapseSetup(
     val customInterval: Boolean = false,
     /** Astro: pause between one frame ending and the next starting. The interval is exposure plus this. */
     val astroGapMs: Long = 2_000,
+    /** Virtual bulb: total exposure in seconds, or null to keep going until stopped. */
+    val bulbSeconds: Int? = 120,
 )
 
 sealed interface CaptureUi {

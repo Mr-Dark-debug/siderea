@@ -17,11 +17,13 @@ import io.github.mrdarkdebug.siderea.core.export.VideoSpec
 import io.github.mrdarkdebug.siderea.core.export.ZipExporter
 import io.github.mrdarkdebug.siderea.core.export.ZipSource
 import io.github.mrdarkdebug.siderea.core.processing.AstroProcessor
+import io.github.mrdarkdebug.siderea.core.processing.BulbMode
 import io.github.mrdarkdebug.siderea.core.processing.FileFrameSource
 import io.github.mrdarkdebug.siderea.core.processing.Levels
 import io.github.mrdarkdebug.siderea.core.processing.MasterDark
 import io.github.mrdarkdebug.siderea.core.processing.RgbImageIo
 import io.github.mrdarkdebug.siderea.core.processing.StackResult
+import io.github.mrdarkdebug.siderea.core.processing.VirtualBulbProcessor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -244,6 +246,47 @@ class ExportCoordinator
                         }
                     }
                 ExportState.Done(sessionId, title, jpg, "image/jpeg", PublishKind.IMAGE, detail, tif, "image/tiff")
+            }
+        }
+
+        /** A virtual-bulb long exposure from the session's JPEG frames. */
+        fun startBulb(
+            sessionId: String,
+            mode: BulbMode,
+        ) {
+            val handle = begin(sessionId) ?: return
+            val title = "Long exposure"
+            val lights = jpegFrames(handle, skipMoved = false)
+            val stem = "${handle.dir.name}_${mode.name.lowercase()}"
+            enqueue(sessionId, title) {
+                if (lights.size < MIN_ASTRO_FRAMES) throw ExportException("Needs at least $MIN_ASTRO_FRAMES frames.")
+                val job = currentCoroutineContext().job
+                val first = FrameDecoder.size(lights.first())
+                val sample = AstroMemory.sampleFor(first.width, first.height, AstroMode.STACK)
+                val note = if (sample > 1) " Processed at 1/$sample size to fit in memory." else ""
+                val image =
+                    VirtualBulbProcessor.combine(
+                        FileFrameSource(lights, sample),
+                        mode,
+                        checkCancelled = { job.ensureActive() },
+                        onProgress = { done, total ->
+                            mutable.value = ExportState.Working(sessionId, title, "Combining frames", done, total)
+                        },
+                    ) ?: throw ExportException("None of the frames could be read.")
+                val jpg = File(handle.exportsDir(), "$stem.jpg")
+                val tif = File(handle.exportsDir(), "$stem.tif")
+                RgbImageIo.writeJpeg(image, jpg)
+                RgbImageIo.writeTiff8(image, tif)
+                ExportState.Done(
+                    sessionId,
+                    title,
+                    jpg,
+                    "image/jpeg",
+                    PublishKind.IMAGE,
+                    "${mode.label}: ${image.width}x${image.height} from ${lights.size} frames.$note",
+                    tif,
+                    "image/tiff",
+                )
             }
         }
 

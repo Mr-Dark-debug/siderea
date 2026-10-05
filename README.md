@@ -31,7 +31,7 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 | ✅ | **M2** Timelapse: foreground service, sessions, `session.json`, resume | v0.3.0 | done, emulator-verified |
 | ✅ | **M3** Export: H.264/HEVC, fps, resolution, crop, deflicker, TIFF, ZIP | v0.4.0 | done, emulator-verified |
 | ✅ | **M4** Astro: star trails, dark frames, aligned stacking | v0.5.0 | done, emulator-verified |
-| ⬜ | **M5** Virtual Bulb long exposure | v0.6.0 | not started |
+| ✅ | **M5** Virtual Bulb long exposure | v0.6.0 | done, emulator-verified |
 | ⬜ | **M6** Exposure ramp, polish, accessibility | v1.0.0 | not started |
 
 > **Honest caveat.** Everything camera-related has been run on Android *emulators* and checked against a real
@@ -51,12 +51,14 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
   <img src="docs/screenshots/timelapse-running.png" width="23%" alt="A running timelapse">
   <img src="docs/screenshots/timelapse-resume.png" width="23%" alt="Resume prompt after an interruption">
   <img src="docs/screenshots/export-video.png" width="23%" alt="Video export settings with a live estimate">
+  <img src="docs/screenshots/astro-panel.png" width="23%" alt="Astro mode setup">
+  <img src="docs/screenshots/bulb-panel.png" width="23%" alt="Virtual bulb setup, warning that this camera has no manual shutter">
 </p>
 
 <sub>Captured on Android emulators, whose virtual cameras are simpler than a real phone's (the scene in the first
 shot is the emulator's test room). Real-device screenshots will replace these.</sub>
 
-## What it does today (v0.5.0)
+## What it does today (v0.6.0)
 
 - **Manual photo mode** on Camera2: shutter, ISO, focus, white balance (presets or Kelvin + tint) and exposure
   compensation, each with Auto / Manual. Shutter and ISO combine into P / S / I / M behaviour.
@@ -76,6 +78,9 @@ shot is the emulator's test room). Real-device screenshots will replace these.</
   **comet trails** and an **aligned stack** (stars are detected, matched against a reference frame, and the frames
   are warped onto it and averaged; frames that cannot be matched are left out and listed), plus **dark frames**
   taken with the lens covered and subtracted. Results are a JPEG and a TIFF (16-bit for stacks).
+- **Virtual Bulb**: a long exposure built from many short ones, past the lens's single-frame limit. Pick a total
+  time (30 s to 1 h) or run until you stop it; the frames are then added like one long exposure (in linear light,
+  with a gain that keeps highlights from clipping), merged keeping the brightest light, or averaged.
 - **Export** from a session: **video** (H.264 or HEVC, AV1 only where there is a hardware encoder; 12-60 fps;
   4K / 1080p / 720p / source; 16:9, 4:3, 1:1, 9:16 crops; three deflicker strengths; three quality levels, with a
   live size estimate), a **ZIP** of the frames and `session.json`, and any single frame as an uncompressed

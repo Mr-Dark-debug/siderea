@@ -488,6 +488,7 @@ private fun BottomRow(
                 when (state.mode) {
                     CameraMode.TIMELAPSE -> "Start timelapse"
                     CameraMode.ASTRO -> "Start astro session"
+                    CameraMode.LONG_EXPOSURE -> "Start long exposure"
                     else -> "Take photo"
                 },
             busyDescription = if (state.capture is CaptureUi.Countdown) "Cancel timer" else "Stop exposure",
