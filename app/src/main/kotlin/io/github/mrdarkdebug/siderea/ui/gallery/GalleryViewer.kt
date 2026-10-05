@@ -109,8 +109,8 @@ fun GalleryViewer(
                 KeyValueRow("Format", photo.name.substringAfterLast('.').uppercase(Locale.ROOT))
                 KeyValueRow(
                     "Size",
-                    io.github.mrdarkdebug.siderea.device.DeviceStatus
-                        .formatBytes(photo.bytes),
+                    android.text.format.Formatter
+                        .formatShortFileSize(context, photo.bytes),
                 )
                 if (photo.width > 0) KeyValueRow("Dimensions", "${photo.width} × ${photo.height}")
                 metadata.forEach { (key, value) -> KeyValueRow(key, value) }

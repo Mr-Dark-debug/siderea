@@ -4,13 +4,19 @@ All notable changes are recorded here. Each milestone lists **what works**, **wh
 real device**, and **known issues**. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.1.2] - 2026-10-05
+
+### Fixed
+- Show readable, localized photo sizes in bytes, KB or MB instead of rounding small images to "0 MB".
+- This is the final published camera/gallery/update release with verified persistent signing.
+
 ## [1.1.1] - 2026-10-05
 
 ### Fixed
 - Explicitly configure the persistent signing-key path in Gradle and verify the built APK certificate
   against the configured keystore before publishing. The initial v1.1.0 CI build used a different key
   despite a persistent key being configured; the updater rejected it during end-to-end verification.
-- v1.1.0 is marked prerelease. Use v1.1.1 for the validated camera, gallery and update release.
+- v1.1.0 is marked prerelease. Use v1.1.2 for the validated camera, gallery and update release.
   If you installed the initial v1.1.0 APK, export private sessions before a one-time reinstall too.
 
 ## [1.1.0] - 2026-10-05

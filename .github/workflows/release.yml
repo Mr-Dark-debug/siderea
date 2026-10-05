@@ -90,7 +90,7 @@ jobs:
             banner=""
           else
             name="siderea-v${VERSION}-debug-signed.apk"
-            banner="> **Debug-signed build.** Uses a persistent key from v1.1.1 onward. The v1.0.0 and initial v1.1.0 public APKs used different keys: export private sessions before the one-time reinstall. Shared photos stay in Pictures/Siderea."
+            banner="> **Debug-signed build.** Uses a persistent key from v1.1.2 onward. The v1.0.0 and initial v1.1.0 public APKs used different keys: export private sessions before the one-time reinstall. Shared photos stay in Pictures/Siderea."
           fi
           cp "$src" "$name"
           sha256sum "$name" > "$name.sha256"

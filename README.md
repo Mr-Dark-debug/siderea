@@ -33,7 +33,7 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 | ✅ | **M4** Astro: star trails, dark frames, aligned stacking | v0.5.0 | done, emulator-verified |
 | ✅ | **M5** Virtual Bulb long exposure | v0.6.0 | done, emulator-verified |
 | ✅ | **M6** Exposure ramp, polish, accessibility | v1.0.0 | done, emulator-verified |
-| ✅ | **M7** Simpler camera, calendar gallery, GitHub updates | v1.1.1 | emulator-verified; see validation report |
+| ✅ | **M7** Simpler camera, calendar gallery, GitHub updates | v1.1.2 | emulator-verified; see validation report |
 
 > **Honest caveat.** Everything camera-related has been run on Android *emulators* and checked against a real
 > Pixel 10 *capability report*, but not yet on the phone itself. The first people to run it on hardware will
@@ -59,7 +59,7 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 <sub>Captured on Android emulators. The first three show v1.1.0 using the emulator's moving test pattern;
 the remaining screenshots document earlier capture features. Real-device screenshots will replace these.</sub>
 
-## What it does today (v1.1.1)
+## What it does today (v1.1.2)
 
 - **Simpler camera:** Auto and Pro, a larger viewfinder, compact lens selectors and a Tools sheet for
   format, aspect and shooting aids. The shutter and built-in gallery stay one tap away.
