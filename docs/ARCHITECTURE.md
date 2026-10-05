@@ -74,7 +74,7 @@ camera's HAL reports, because a phone can run Android 16 while its camera HAL pr
 
 ### Video export: `MediaCodec` + `MediaMuxer` (not Media3 Transformer)
 
-*Decided on architecture grounds. To be validated by a benchmark at the start of M3; exit criteria below.*
+*Decided on architecture grounds and implemented in M3 (see "Export pipeline" below). The throughput benchmark on real hardware is still outstanding; exit criteria below.*
 
 The export has to do things a generic transcoder pipeline does not model:
 
@@ -126,6 +126,22 @@ tracker. It talks to the camera only through `FrameCapturer`. In `:app`, `Timela
 service, type camera) holds a partial wake lock and a headless preview surface and drives the runner;
 `AndroidRunnerClock` waits with `AlarmManager` allow-while-idle alarms for waits of 20 s or more so Doze can't
 hold a frame back. The UI observes `CaptureSessionState`; it never owns the run.
+
+### Export pipeline (M3)
+`TimelapseVideoExporter` (in `:core:export`) plans, optionally measures, then renders:
+1. **Plan:** probe the first readable frame's upright size, cut the crop (`ExportMath.cropRect`), scale to the
+   chosen long side (never up), align to the encoder's width/height alignment, shrink in even steps until
+   `MediaCodecInfo.VideoCapabilities` accepts size and rate. A hardware encoder is preferred; AV1 requires one.
+2. **Measure** (deflicker only): decode each frame at about 240 px, take the mean Rec. 709 luma, then run
+   `Deflicker.gains`.
+3. **Render:** each frame is decoded with EXIF rotation applied, uploaded as a GL texture and drawn through an
+   EGL window surface onto the encoder's input surface with `eglPresentationTimeANDROID` set to
+   `index / fps`. A canvas was tried first and rejected: it stamps frames with the wall clock and the encoder
+   then drops frames to hit its target rate. A separate drain thread feeds `MediaMuxer` so a slow encoder
+   cannot block rendering.
+4. **App side:** `ExportCoordinator` (singleton, its own scope) owns the work and exposes `ExportState`;
+   `ExportService` (foreground, data sync) only keeps the process alive and shows progress. Finished files are
+   published through MediaStore on request.
 
 ### Settings
 Jetpack DataStore (Preferences) behind `SettingsRepository`. Host unit tests use an in-memory `DataStore`

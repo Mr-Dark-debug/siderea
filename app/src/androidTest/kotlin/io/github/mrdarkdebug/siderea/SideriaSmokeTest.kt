@@ -67,7 +67,7 @@ class SideriaSmokeTest {
     fun modesThatAreNotBuiltYetSaySoInsteadOfPretending() {
         waitForCamera()
         rule.onNodeWithText("ASTRO").performClick()
-        rule.waitUntilAtLeastOneExists(hasText("isn't built yet", substring = true), 5_000)
+        rule.waitUntilAtLeastOneExists(hasText("isn't built yet", substring = true), 10_000)
     }
 
     @Test

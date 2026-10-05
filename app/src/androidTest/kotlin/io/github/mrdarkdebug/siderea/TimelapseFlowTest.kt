@@ -5,11 +5,14 @@ import android.content.Context
 import android.os.Build
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.rule.GrantPermissionRule
 import io.github.mrdarkdebug.siderea.core.data.settings.SettingsRepository
@@ -86,6 +89,39 @@ class TimelapseFlowTest {
         rule.waitUntilAtLeastOneExists(hasText("STOPPED"), 5_000)
         assertTrue("session.json must exist on disk", sessionJsonFiles().isNotEmpty())
     }
+
+    @Test
+    fun aFinishedSessionExportsAVideoAndAZip() {
+        openTimelapse()
+        rule.onNodeWithContentDescription("Start timelapse").performClick()
+        rule.waitUntilAtLeastOneExists(hasText("BEFORE YOU START"), 10_000)
+        rule.onNodeWithText("Start").performClick()
+        rule.waitUntilAtLeastOneExists(hasText("CAPTURING"), 20_000)
+        rule.waitUntil(timeoutMillis = 40_000) { framesOnDisk() >= 2 }
+        rule.onNodeWithText("Stop").performClick()
+        rule.waitUntilAtLeastOneExists(hasText("STOPPED"), 20_000)
+        rule.onNodeWithText("Open session").performClick()
+
+        rule.waitUntilAtLeastOneExists(hasText("Make video"), 10_000)
+        rule.onNodeWithText("Make video").performClick()
+        rule.waitUntilAtLeastOneExists(hasText("MAKE A VIDEO"), 5_000)
+        rule.onNodeWithText("Start").performClick()
+        rule.waitUntilAtLeastOneExists(hasText("VIDEO READY"), 60_000)
+        assertTrue("an mp4 must exist in exports/", exportedFiles("mp4").isNotEmpty())
+        // The result card is taller than the room left below it, so bring its button into view first.
+        rule.onNodeWithText("Done").performScrollTo().performClick()
+
+        // Dismissing is asynchronous, and the list may be left scrolled past the buttons by the taller result card.
+        rule.waitUntilDoesNotExist(hasText("VIDEO READY"), 5_000)
+        rule.onNode(hasScrollAction()).performScrollToNode(hasText("ZIP frames"))
+        rule.waitUntilAtLeastOneExists(hasText("ZIP frames"), 5_000)
+        rule.onNodeWithText("ZIP frames").performClick()
+        rule.waitUntilAtLeastOneExists(hasText("ZIP READY"), 30_000)
+        assertTrue("a zip must exist in exports/", exportedFiles("zip").isNotEmpty())
+    }
+
+    private fun exportedFiles(extension: String): List<File> =
+        sessionsRoot.walkTopDown().filter { it.extension == extension && it.parentFile?.name == "exports" }.toList()
 
     private fun sessionJsonFiles(): List<File> =
         sessionsRoot.walkTopDown().filter { it.name == "session.json" }.toList()

@@ -45,6 +45,7 @@ import io.github.mrdarkdebug.siderea.core.camera.capability.CameraFormat
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionStatus
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionSummary
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.IntervalMath
+import io.github.mrdarkdebug.siderea.core.export.VideoSpec
 import io.github.mrdarkdebug.siderea.core.ui.components.CapabilityChip
 import io.github.mrdarkdebug.siderea.core.ui.components.ChipButton
 import io.github.mrdarkdebug.siderea.core.ui.components.KeyValueRow
@@ -186,8 +187,11 @@ fun SessionDetailScreen(
 ) {
     val detail by viewModel.detail.collectAsStateWithLifecycle()
     LaunchedEffect(id) { viewModel.load(id) }
+    val exportState by viewModel.exportState.collectAsStateWithLifecycle()
     var renaming by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
+    var videoDialog by remember { mutableStateOf(false) }
+    var tiffFrame by remember { mutableStateOf<String?>(null) }
     val nav = WindowInsets.navigationBars.asPaddingValues()
     val d = detail?.takeIf { it.manifest.id == id }
     Box(Modifier.fillMaxSize()) {
@@ -215,7 +219,7 @@ fun SessionDetailScreen(
                         ),
                     verticalArrangement = Arrangement.spacedBy(SideriaSpacing.sm),
                 ) {
-                    item { PreviewStrip(d.previews) }
+                    item { PreviewStrip(d.previews) { tiffFrame = it.nameWithoutExtension } }
                     item { Facts(d) }
                     if (d.manifest.events.isNotEmpty()) {
                         item { SectionLabel("Events") }
@@ -232,10 +236,14 @@ fun SessionDetailScreen(
                         }
                     }
                     item {
+                        Spacer(Modifier.height(SideriaSpacing.sm))
+                        ExportSection(d, exportState, viewModel) { videoDialog = true }
+                    }
+                    item {
                         Spacer(Modifier.height(SideriaSpacing.md))
                         Text(
                             "Frames and session.json are in app storage:\n${d.folder.path}\n" +
-                                "Video and stack export arrive in the next releases.",
+                                "Tap a preview above to save that frame as a TIFF.",
                             style = Siderea.text.caption,
                             color = Siderea.palette.onSurfaceMuted,
                         )
@@ -257,6 +265,25 @@ fun SessionDetailScreen(
                         }
                     }
                 }
+            }
+        }
+        if (videoDialog && d != null) {
+            VideoDialog(d, viewModel, d.manifest.timelapse?.outputFps ?: VideoSpec.DEFAULT_FPS, {
+                videoDialog = false
+            }) { spec, skip ->
+                videoDialog = false
+                viewModel.exportVideo(id, spec, skip)
+            }
+        }
+        tiffFrame?.let { frame ->
+            ConfirmDialog(
+                title = "Save $frame as TIFF?",
+                body = "Makes an uncompressed 8-bit TIFF from this frame's JPEG, in the session's exports folder.",
+                confirm = "Save TIFF",
+                onDismiss = { tiffFrame = null },
+            ) {
+                tiffFrame = null
+                viewModel.exportTiff(id, frame)
             }
         }
         if (renaming && d != null) {
@@ -282,7 +309,10 @@ fun SessionDetailScreen(
 }
 
 @Composable
-private fun PreviewStrip(previews: List<File>) {
+private fun PreviewStrip(
+    previews: List<File>,
+    onClick: (File) -> Unit,
+) {
     if (previews.isEmpty()) return
     Row(horizontalArrangement = Arrangement.spacedBy(SideriaSpacing.sm), modifier = Modifier.fillMaxWidth()) {
         previews.forEach { file ->
@@ -295,7 +325,8 @@ private fun PreviewStrip(previews: List<File>) {
                         1f,
                     ).aspectRatio(PREVIEW_ASPECT)
                     .clip(SideriaShapes.small)
-                    .background(Siderea.palette.surfaceRaised),
+                    .background(Siderea.palette.surfaceRaised)
+                    .clickable(onClickLabel = "Save this frame as TIFF") { onClick(file) },
             ) {
                 bitmap?.let {
                     Image(

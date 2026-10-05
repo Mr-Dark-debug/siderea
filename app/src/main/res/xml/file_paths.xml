@@ -2,4 +2,6 @@
 <paths>
     <!-- Capability reports are written here before being shared. -->
     <cache-path name="reports" path="reports/" />
+    <!-- Finished exports (video, zip, tiff) in a session's exports folder, shared from the session screen. -->
+    <external-files-path name="sessions" path="Siderea/" />
 </paths>

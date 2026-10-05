@@ -60,6 +60,9 @@ make red builds meaningless. Run them before every release.
   folder layout, actual per-frame values in `session.json`, clean stop and clean finish.
 * `TimelapseFlowTest`: through the real UI: the calculator is shown first, pre-flight can be cancelled, a
   session runs, stops and its detail screen opens.
+* `VideoExportInstrumentedTest`: real MP4s from the phone's own encoder, read back with `MediaExtractor`: one
+  sample per frame, size, even timeline, crop, HEVC (skipped when there is no encoder), deflicker, unreadable
+  frames, cancel, TIFF, MediaStore publishing.
 * `CameraCapabilityReaderInstrumentedTest`: the real reader against whatever cameras the target has;
   consistency checks (unique ids, physical cameras point back to a logical parent, ranges agree with
   capabilities, one `1x` lens per facing, API 36 keys only on API 36, verdicts never over-claim, JSON
@@ -159,7 +162,7 @@ Run on the Pixel 10 (or any phone with several lenses). Tick off and report anyt
 ## M3 · Export (v0.4.0)
 
 - [ ] 1080p / 4K, 24 / 25 / 30 / 60 fps, H.264 and HEVC all play in the Photos app and in VLC.
-- [ ] AV1 is offered only on phones with a hardware AV1 encoder.
+- [ ] AV1 is offered only on phones with a hardware AV1 encoder (and not at all on a phone without one).
 - [ ] Deflicker removes visible flicker from a sunset test sequence without pumping brightness.
 - [ ] Cancel mid-export leaves no partial file in `Movies/Siderea`.
 - [ ] Export notification appears when the app is in the background and opens the result.

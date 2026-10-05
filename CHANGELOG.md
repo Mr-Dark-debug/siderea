@@ -4,6 +4,57 @@ All notable changes are recorded here. Each milestone lists **what works**, **wh
 real device**, and **known issues**. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.4.0] - 2026-10-05
+
+**Milestone M3: export.** Sessions can now become video, a ZIP, or a TIFF. No new capture features.
+
+### What works
+- **Video** from a session's JPEG frames with the phone's own hardware encoder (`MediaCodec` with an input
+  surface, written with `MediaMuxer`): **H.264**, **HEVC**, and **AV1 only when the phone has a hardware AV1
+  encoder**. Frame rate 12 / 24 / 25 / 30 / 60, output size (source / 4K / 1080p / 720p, never enlarged), crop
+  (full / 16:9 / 4:3 / 1:1 / 9:16), quality (draft / good / best) and a **live estimate** of frames, size,
+  duration and file size before you start.
+- **Deflicker** (light / medium / strong): a luminance pre-pass over the whole sequence, then a per-frame gain
+  towards the average of its neighbours, so a single bright or dark frame is pulled in but a slow sunset change
+  is kept.
+- **Exact timeline.** Frames are drawn through OpenGL with their own presentation times. A first version drew
+  with a canvas and the encoder, seeing frames arrive far faster than the video's frame rate, silently dropped
+  one; the emulator test caught it.
+- **Encoder limits respected.** Size and rate are checked against `MediaCodecList`, aligned, and shrunk in even
+  steps when the encoder refuses; the result says so when that happened.
+- **ZIP** of the frames (JPEG and DNG stored, JSON compressed) plus `session.json`; **TIFF** of any one frame
+  (tap a preview). Both are streamed, so a big frame is never held twice in memory.
+- **Runs in the background:** exports live in an app-wide scope with a foreground service (data sync) and a
+  progress notification, can be cancelled, delete their partial file on cancel or failure, and leave frames
+  untouched. Results go to `Movies/Siderea`, `Pictures/Siderea` or `Download/Siderea` through MediaStore (no
+  storage permission) or the share sheet.
+- Unreadable frames (for example a half-written JPEG after a crash) are skipped and counted; frames where the
+  gyro flagged movement can be left out.
+
+### Verified
+- 252 host unit tests (adds crop/size/bitrate maths, deflicker behaviour, TIFF round-trip through an independent
+  parser, ZIP contents and cleanup).
+- 44 emulator tests on Android 16 (adds 10 that encode real MP4s and read them back with `MediaExtractor`: one
+  sample per frame, correct size, even 1 / fps spacing, crop, HEVC, deflicker measurably reducing brightness
+  swing, skipped frames, cancel deleting the file, TIFF size, MediaStore publishing; and a UI test that exports a
+  video and a ZIP from a real session).
+- By hand on the emulator: Make video, progress, and Save to phone put the MP4 in `Movies/Siderea`.
+- ktlint, detekt, Android lint and an R8 release build are clean.
+
+### Untested on a real device
+- Playback of the output in the Photos app, VLC and other players; HEVC and AV1 on real hardware.
+- 4K at 60 fps and long sequences (hundreds of 12 MP+ frames): speed, memory and thermal behaviour.
+- Whether a phone's hardware encoder honours the requested bitrate on timelapse material.
+- The export notification and the data-sync service time limit on Android 15+.
+
+### Known issues
+- Frames are placed at a constant frame rate. The sensor timestamps in `session.json` are not used to retime
+  the video, so thermal drift in a long session is neither reproduced nor normalised.
+- Video is made from the **JPEG** frames only; DNG-only sessions have nothing to turn into video yet.
+- TIFF is 8-bit from the JPEG; 16-bit output arrives with the stacking in M4.
+- Exports run one at a time.
+- Astro, Long exposure and the exposure ramp are still not built.
+
 ## [0.3.0] - 2026-10-05
 
 **Milestone M2: timelapse, sessions, foreground service, resume.** Timelapse mode on the mode strip is now
