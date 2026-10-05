@@ -7,6 +7,8 @@ import android.view.Surface
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import io.github.mrdarkdebug.siderea.capture.RunState
+import io.github.mrdarkdebug.siderea.capture.TimelapseCoordinator
 import io.github.mrdarkdebug.siderea.core.camera.analysis.FrameAnalysis
 import io.github.mrdarkdebug.siderea.core.camera.analysis.LumaAnalysis
 import io.github.mrdarkdebug.siderea.core.camera.capability.CapabilityRepository
@@ -29,6 +31,8 @@ import io.github.mrdarkdebug.siderea.core.camera.engine.LensCatalog
 import io.github.mrdarkdebug.siderea.core.camera.engine.OpenParams
 import io.github.mrdarkdebug.siderea.core.camera.engine.RequestPlanner
 import io.github.mrdarkdebug.siderea.core.camera.engine.StillRequest
+import io.github.mrdarkdebug.siderea.core.capture.timelapse.OverheadEstimate
+import io.github.mrdarkdebug.siderea.core.capture.timelapse.Preflight
 import io.github.mrdarkdebug.siderea.core.data.settings.CameraStateRepository
 import io.github.mrdarkdebug.siderea.device.DeviceMotion
 import io.github.mrdarkdebug.siderea.device.DeviceStatusReader
@@ -53,6 +57,7 @@ import kotlin.math.pow
  * Owns the camera screen's state. All camera work happens in [CameraEngine] on its own thread; this class
  * decides what to ask of it and turns what it reports into [CameraUiState].
  */
+@Suppress("LargeClass") // single owner of camera-screen state; split by feature in a later refactor
 @HiltViewModel
 class CameraViewModel
     @Inject
@@ -64,6 +69,7 @@ class CameraViewModel
         private val deviceStatus: DeviceStatusReader,
         private val motion: DeviceMotion,
         private val keys: ShutterKeyBus,
+        private val timelapse: TimelapseCoordinator,
     ) : ViewModel() {
         private val mutableState = MutableStateFlow(CameraUiState())
         val state: StateFlow<CameraUiState> = mutableState.asStateFlow()
@@ -104,6 +110,9 @@ class CameraViewModel
             viewModelScope.launch { engine.frames.collect { frame -> mutableState.update { it.copy(live = frame) } } }
             viewModelScope.launch { engine.events.collect(::onCaptureEvent) }
             viewModelScope.launch { keys.presses.collect { onShutterPressed() } }
+            viewModelScope.launch { timelapse.run.collect(::onRunState) }
+            viewModelScope.launch { motion.state.collect { timelapse.onMotion(it) } }
+            refreshInterrupted()
             viewModelScope.launch {
                 while (true) {
                     mutableState.update { it.copy(device = deviceStatus.read()) }
@@ -130,6 +139,7 @@ class CameraViewModel
                 maybeOpen()
             } else {
                 motion.stop()
+                if (mutableState.value.run is RunState.Running) return
                 captureJob?.cancel()
                 engine.cancelCapture()
                 openJob?.cancel()
@@ -147,9 +157,10 @@ class CameraViewModel
             val texture = surfaceTexture
             surfaceTexture = null
             lastOpenKey = null
+            val sessionOwnsCamera = mutableState.value.run is RunState.Running
             viewModelScope.launch {
                 // The camera must stop writing before its surface is released.
-                engine.close()
+                if (!sessionOwnsCamera) engine.close()
                 previewSurface?.release()
                 previewSurface = null
                 texture?.release()
@@ -160,6 +171,7 @@ class CameraViewModel
             val s = mutableState.value
             val lens = s.lens ?: return
             if (s.permission != PermissionState.GRANTED || !foreground) return
+            if (s.run is RunState.Running) return
             val texture = surfaceTexture ?: return
             val key = "${lens.key}|${s.settings.format}|${s.aspect}"
             if (!force && key == lastOpenKey && s.engine !is EngineState.Failed) return
@@ -228,6 +240,7 @@ class CameraViewModel
                                     ?: AspectRatio.FOUR_THREE,
                             aids = saved.aids,
                             timerSeconds = saved.timerSeconds,
+                            timelapse = saved.timelapse,
                             effectiveShutterNs = settings.shutterNs,
                             effectiveIso = settings.iso,
                         )
@@ -385,7 +398,10 @@ class CameraViewModel
                 )
                 return
             }
-            mutableState.update { it.copy(mode = mode) }
+            mutableState.update {
+                it.copy(mode = mode, panel = if (mode == CameraMode.TIMELAPSE) ControlPanel.TIMELAPSE else null)
+            }
+            if (mode == CameraMode.TIMELAPSE) refreshOverhead()
         }
 
         fun dismissMessage() {
@@ -532,7 +548,7 @@ class CameraViewModel
         fun onShutterPressed() {
             when (mutableState.value.capture) {
                 CaptureUi.Idle -> {
-                    startCapture()
+                    if (mutableState.value.mode == CameraMode.TIMELAPSE) openPreflight() else startCapture()
                 }
 
                 is CaptureUi.Countdown -> {
@@ -623,13 +639,154 @@ class CameraViewModel
 
         suspend fun thumbnail(uri: String): android.graphics.Bitmap? = saver.thumbnail(android.net.Uri.parse(uri))
 
+        // region timelapse
+
+        fun setTimelapse(change: (TimelapseSetup) -> TimelapseSetup) {
+            mutableState.update { it.copy(timelapse = change(it.timelapse)) }
+            refreshOverhead()
+            schedulePersist()
+        }
+
+        /** The overhead shown next to the interval: measured on this phone if known, otherwise estimated. */
+        private fun refreshOverhead() {
+            viewModelScope.launch {
+                val format = mutableState.value.settings.format
+                val estimate = timelapse.overhead(format)
+                mutableState.update { it.copy(overhead = estimate) }
+            }
+        }
+
+        /** Takes three real photos at the chosen settings, kept nowhere, and times them. */
+        fun measureOverhead() {
+            val s = mutableState.value
+            val limits = s.limits ?: return
+            if (s.measuring || s.engine !is EngineState.Ready || s.run is RunState.Running) return
+            mutableState.update { it.copy(measuring = true) }
+            viewModelScope.launch {
+                val plan =
+                    RequestPlanner.plan(
+                        s.settings,
+                        s.effectiveShutterNs,
+                        s.effectiveIso,
+                        limits,
+                        engineCapabilities,
+                        forPreview = false,
+                    )
+                val orientation =
+                    s.lens?.let {
+                        OrientationMath.jpegOrientation(
+                            it.sensorOrientation,
+                            motion.state.value.deviceOrientation,
+                            it.isFront,
+                        )
+                    } ?: 0
+                val result = timelapse.measureOverhead(plan, s.settings.format, orientation)
+                mutableState.update { it.copy(measuring = false) }
+                result.onSuccess { estimate -> mutableState.update { it.copy(overhead = estimate) } }
+                result.onFailure {
+                    showMessage(
+                        (it as? EngineException)?.userMessage ?: "Measuring failed. Try again.",
+                    )
+                }
+            }
+        }
+
+        fun openPreflight() {
+            val s = mutableState.value
+            val megapixels =
+                s.ready?.let { r ->
+                    val size = r.rawSize ?: r.jpegSize
+                    size?.let { it.width.toLong() * it.height / MEGA }?.toFloat()
+                } ?: DEFAULT_MEGAPIXELS
+            val items = timelapse.preflight(s.timelapse, s.settings, s.effectiveShutterNs, s.overhead, megapixels)
+            mutableState.update { it.copy(preflight = items) }
+        }
+
+        fun dismissPreflight() {
+            mutableState.update { it.copy(preflight = null) }
+        }
+
+        /** Starts the service. The checklist's blocking items have already been cleared by the caller. */
+        fun confirmStart() {
+            val s = mutableState.value
+            val lens = s.lens ?: return
+            if (!Preflight.canStart(s.preflight.orEmpty())) return
+            val orientation =
+                OrientationMath.jpegOrientation(
+                    lens.sensorOrientation,
+                    motion.state.value.deviceOrientation,
+                    lens.isFront,
+                )
+            val request =
+                timelapse.launchRequest(
+                    lensKey = lens.key,
+                    settings = s.settings,
+                    aspect = s.aspect.name,
+                    setup = s.timelapse,
+                    shutterNs = s.effectiveShutterNs,
+                    iso = s.effectiveIso,
+                    orientation = orientation,
+                )
+            mutableState.update { it.copy(preflight = null, panel = null) }
+            timelapse.start(request)
+        }
+
+        fun stopTimelapse() = timelapse.stop()
+
+        fun dismissFinished() {
+            timelapse.dismissFinished()
+            refreshInterrupted()
+        }
+
+        fun refreshInterrupted() {
+            viewModelScope.launch(Dispatchers.IO) {
+                val list = timelapse.interrupted()
+                mutableState.update { it.copy(interrupted = list) }
+            }
+        }
+
+        fun resumeInterrupted(sessionId: String) {
+            val orientation = motion.state.value.deviceOrientation
+            val request =
+                timelapse.resumeRequest(
+                    sessionId,
+                    OrientationMath.jpegOrientation(PORTRAIT_SENSOR_ORIENTATION, orientation, false),
+                )
+            if (request == null) {
+                showMessage("That session can't be resumed.")
+                return
+            }
+            mutableState.update { it.copy(interrupted = it.interrupted.filterNot { s -> s.id == sessionId }) }
+            timelapse.start(request)
+        }
+
+        fun finalizeInterrupted(sessionId: String) {
+            viewModelScope.launch {
+                timelapse.finalize(sessionId)
+                refreshInterrupted()
+            }
+        }
+
+        private fun onRunState(run: RunState) {
+            val previous = mutableState.value.run
+            mutableState.update { it.copy(run = run) }
+            // When a session ends the camera is free again: bring the viewfinder back.
+            if (previous is RunState.Running && run !is RunState.Running) {
+                lastOpenKey = null
+                maybeOpen(force = true)
+                refreshInterrupted()
+            }
+        }
+
+        // endregion
+
         private fun schedulePersist() {
             persistJob?.cancel()
             persistJob =
                 viewModelScope.launch {
                     delay(PERSIST_DELAY_MS)
                     val s = mutableState.value
-                    val prefs = CameraPrefs(s.lens?.key, s.settings, s.aspect.name, s.aids, s.timerSeconds)
+                    val prefs = CameraPrefs(s.lens?.key, s.settings, s.aspect.name, s.aids, s.timerSeconds, s.timelapse)
                     prefsStore.save(json.encodeToString(CameraPrefs.serializer(), prefs))
                 }
         }
@@ -645,10 +802,13 @@ class CameraViewModel
         }
 
         private companion object {
+            const val PORTRAIT_SENSOR_ORIENTATION = 90
             const val STATUS_INTERVAL_MS = 20_000L
             const val AE_INTERVAL_MS = 350L
             const val ONE_SECOND_MS = 1_000L
             const val PERSIST_DELAY_MS = 600L
             const val GAMMA = 2.2
+            const val MEGA = 1_000_000L
+            const val DEFAULT_MEGAPIXELS = 12f
         }
     }

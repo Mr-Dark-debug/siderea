@@ -1,5 +1,6 @@
 package io.github.mrdarkdebug.siderea.ui.camera
 
+import io.github.mrdarkdebug.siderea.capture.RunState
 import io.github.mrdarkdebug.siderea.core.camera.control.CaptureSettings
 import io.github.mrdarkdebug.siderea.core.camera.control.ExposureLimits
 import io.github.mrdarkdebug.siderea.core.camera.engine.AspectRatio
@@ -7,6 +8,10 @@ import io.github.mrdarkdebug.siderea.core.camera.engine.EngineState
 import io.github.mrdarkdebug.siderea.core.camera.engine.FrameInfo
 import io.github.mrdarkdebug.siderea.core.camera.engine.Lens
 import io.github.mrdarkdebug.siderea.core.camera.engine.ReadyInfo
+import io.github.mrdarkdebug.siderea.core.capture.session.SessionSummary
+import io.github.mrdarkdebug.siderea.core.capture.session.StopCondition
+import io.github.mrdarkdebug.siderea.core.capture.timelapse.OverheadEstimate
+import io.github.mrdarkdebug.siderea.core.capture.timelapse.PreflightItem
 import io.github.mrdarkdebug.siderea.device.DeviceStatus
 import kotlinx.serialization.Serializable
 
@@ -18,7 +23,7 @@ enum class CameraMode(
     val availableSince: String?,
 ) {
     PHOTO("PHOTO", null),
-    TIMELAPSE("TIMELAPSE", "v0.3.0"),
+    TIMELAPSE("TIMELAPSE", null),
     ASTRO("ASTRO", "v0.5.0"),
     LONG_EXPOSURE("LONG EXPOSURE", "v0.6.0"),
 }
@@ -26,7 +31,7 @@ enum class CameraMode(
 enum class GridMode { OFF, THIRDS, CENTER }
 
 /** The controls that open a panel above the shutter. */
-enum class ControlPanel { SHUTTER, ISO, EV, FOCUS, WB, AIDS }
+enum class ControlPanel { SHUTTER, ISO, EV, FOCUS, WB, AIDS, TIMELAPSE }
 
 @Serializable
 data class Aids(
@@ -37,6 +42,22 @@ data class Aids(
     val histogram: Boolean = true,
     /** Brighten the viewfinder only, so you can compose in the dark. The saved photo is unchanged. */
     val nightView: Boolean = false,
+)
+
+/** What the user has chosen for a timelapse. Remembered between launches. */
+@Serializable
+data class TimelapseSetup(
+    val intervalMs: Long = 5_000,
+    val stop: StopCondition = StopCondition.FRAME_COUNT,
+    val frameCount: Int = 300,
+    val durationMs: Long = 600_000,
+    val lockExposure: Boolean = true,
+    val fps: Int = 30,
+    val adaptToHeat: Boolean = true,
+    /** Keep the screen on (dimmed to black) so Android never puts the phone into deep sleep. */
+    val keepScreenOn: Boolean = true,
+    /** True once the interval was typed in with the ruler rather than picked from the presets. */
+    val customInterval: Boolean = false,
 )
 
 sealed interface CaptureUi {
@@ -85,6 +106,12 @@ data class CameraUiState(
     val lastPhotoUri: String? = null,
     val device: DeviceStatus = DeviceStatus.UNKNOWN,
     val message: UiMessage? = null,
+    val timelapse: TimelapseSetup = TimelapseSetup(),
+    val run: RunState = RunState.Idle,
+    val interrupted: List<SessionSummary> = emptyList(),
+    val overhead: OverheadEstimate = OverheadEstimate(0, measured = false, samples = 0),
+    val preflight: List<PreflightItem>? = null,
+    val measuring: Boolean = false,
 ) {
     val isCapturing: Boolean get() = capture != CaptureUi.Idle
 }
@@ -97,4 +124,5 @@ data class CameraPrefs(
     val aspect: String = AspectRatio.FOUR_THREE.name,
     val aids: Aids = Aids(),
     val timerSeconds: Int = 0,
+    val timelapse: TimelapseSetup = TimelapseSetup(),
 )

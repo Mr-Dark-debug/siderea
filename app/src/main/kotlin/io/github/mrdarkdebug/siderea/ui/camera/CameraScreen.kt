@@ -7,6 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.net.Uri
+import android.os.Build
 import android.provider.Settings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -34,8 +35,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -51,10 +54,12 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.mrdarkdebug.siderea.capture.RunState
 import io.github.mrdarkdebug.siderea.core.camera.capability.CameraFormat
 import io.github.mrdarkdebug.siderea.core.camera.control.FocusMode
 import io.github.mrdarkdebug.siderea.core.camera.control.WbMode
 import io.github.mrdarkdebug.siderea.core.camera.engine.EngineState
+import io.github.mrdarkdebug.siderea.core.capture.timelapse.PreflightFix
 import io.github.mrdarkdebug.siderea.core.ui.components.ChipButton
 import io.github.mrdarkdebug.siderea.core.ui.components.IconTarget
 import io.github.mrdarkdebug.siderea.core.ui.components.PillButton
@@ -73,6 +78,7 @@ import kotlin.math.abs
 @Composable
 fun CameraScreen(
     onOpenSettings: () -> Unit,
+    onOpenSessions: (String?) -> Unit,
     keys: ShutterKeyBus,
     viewModel: CameraViewModel = hiltViewModel(),
 ) {
@@ -103,6 +109,12 @@ fun CameraScreen(
         onDispose { keys.enabled = false }
     }
 
+    val notificationLauncher =
+        rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
+            // Re-judge the checklist now that the answer is known.
+            viewModel.openPreflight()
+        }
+    var interruptedDismissed by remember { mutableStateOf(false) }
     val actions =
         remember(viewModel) {
             CameraActions(
@@ -129,11 +141,67 @@ fun CameraScreen(
                 onOpenLastPhoto = { state.lastPhotoUri?.let { openPhoto(context, it) } },
                 onDismissMessage = viewModel::dismissMessage,
                 onRetry = viewModel::retryOpen,
+                onTimelapse = viewModel::setTimelapse,
+                onMeasure = viewModel::measureOverhead,
+                onOpenSessions = { onOpenSessions(null) },
+                onPreflightStart = viewModel::confirmStart,
+                onPreflightCancel = viewModel::dismissPreflight,
+                onPreflightFix = { fix ->
+                    val packageUri = Uri.fromParts("package", context.packageName, null)
+                    when (fix) {
+                        PreflightFix.NOTIFICATIONS -> {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                            }
+                        }
+
+                        PreflightFix.EXACT_ALARMS -> {
+                            openSystemScreen(context, Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, packageUri))
+                        }
+
+                        PreflightFix.BATTERY_OPTIMISATION -> {
+                            openSystemScreen(
+                                context,
+                                Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, packageUri),
+                            )
+                        }
+
+                        PreflightFix.AIRPLANE_MODE -> {
+                            openSystemScreen(context, Intent(Settings.ACTION_AIRPLANE_MODE_SETTINGS))
+                        }
+
+                        PreflightFix.LOCK_FOCUS -> {
+                            viewModel.setFocusManual(true)
+                            viewModel.openPreflight()
+                        }
+
+                        PreflightFix.NONE -> {
+                            Unit
+                        }
+                    }
+                },
+                onStop = viewModel::stopTimelapse,
+                onOpenFinished = { id ->
+                    viewModel.dismissFinished()
+                    onOpenSessions(id)
+                },
+                onDismissFinished = viewModel::dismissFinished,
+                onResume = viewModel::resumeInterrupted,
+                onFinalize = viewModel::finalizeInterrupted,
             )
         }
 
     Box(Modifier.fillMaxSize()) {
+        val run = state.run
         when {
+            run is RunState.Running -> {
+                RunningScreen(run, actions.onStop)
+            }
+
+            run is RunState.Finished -> {
+                FinishedScreen(run, { actions.onOpenFinished(run.sessionId) }, actions.onDismissFinished)
+            }
+
             state.permission == PermissionState.DENIED -> {
                 PermissionGate(
                     onAllow = { permissionLauncher.launch(Manifest.permission.CAMERA) },
@@ -150,6 +218,29 @@ fun CameraScreen(
             }
         }
         MessageBanner(state.message, actions.onDismissMessage, Modifier.align(Alignment.TopCenter))
+        state.preflight?.let { items ->
+            PreflightDialog(items, actions.onPreflightFix, actions.onPreflightStart, actions.onPreflightCancel)
+        }
+        val interrupted = state.interrupted.firstOrNull()
+        if (interrupted != null && run is RunState.Idle && !interruptedDismissed) {
+            InterruptedDialog(
+                session = interrupted,
+                onResume = { actions.onResume(interrupted.id) },
+                onFinalize = { actions.onFinalize(interrupted.id) },
+                onDismiss = { interruptedDismissed = true },
+            )
+        }
+    }
+}
+
+private fun openSystemScreen(
+    context: Context,
+    intent: Intent,
+) {
+    try {
+        context.startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+    } catch (_: ActivityNotFoundException) {
+        // This phone has no such settings screen; the checklist item stays as a note.
     }
 }
 
@@ -393,7 +484,7 @@ private fun BottomRow(
         }
         ShutterButton(
             onClick = actions.onShutter,
-            description = "Take photo",
+            description = if (state.mode == CameraMode.TIMELAPSE) "Start timelapse" else "Take photo",
             busyDescription = if (state.capture is CaptureUi.Countdown) "Cancel timer" else "Stop exposure",
             progress = if (capturing) (progress ?: 0f) else null,
             enabled = state.engine is EngineState.Ready && state.capture != CaptureUi.Saving,

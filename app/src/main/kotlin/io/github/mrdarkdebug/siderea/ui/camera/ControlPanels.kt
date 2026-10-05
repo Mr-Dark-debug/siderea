@@ -57,6 +57,17 @@ class CameraActions(
     val onOpenLastPhoto: () -> Unit,
     val onDismissMessage: () -> Unit,
     val onRetry: () -> Unit,
+    val onTimelapse: ((TimelapseSetup) -> TimelapseSetup) -> Unit,
+    val onMeasure: () -> Unit,
+    val onOpenSessions: () -> Unit,
+    val onPreflightStart: () -> Unit,
+    val onPreflightCancel: () -> Unit,
+    val onPreflightFix: (io.github.mrdarkdebug.siderea.core.capture.timelapse.PreflightFix) -> Unit,
+    val onStop: () -> Unit,
+    val onOpenFinished: (String) -> Unit,
+    val onDismissFinished: () -> Unit,
+    val onResume: (String) -> Unit,
+    val onFinalize: (String) -> Unit,
 )
 
 private const val EV_STEP = 1f / 3f
@@ -102,6 +113,7 @@ fun ControlPanelSheet(
         val limits = state.limits
         when {
             panel == ControlPanel.AIDS -> AidsPanel(state.aids, actions)
+            panel == ControlPanel.TIMELAPSE -> TimelapsePanel(state, actions)
             limits == null -> Hint("Reading this lens…")
             panel == ControlPanel.SHUTTER -> ShutterPanel(state, limits, actions)
             panel == ControlPanel.ISO -> IsoPanel(state, limits, actions)
@@ -122,6 +134,7 @@ private fun panelTitle(panel: ControlPanel) =
         ControlPanel.FOCUS -> "FOCUS"
         ControlPanel.WB -> "WHITE BALANCE"
         ControlPanel.AIDS -> "VIEWFINDER AIDS"
+        ControlPanel.TIMELAPSE -> "TIMELAPSE"
     }
 
 @Composable

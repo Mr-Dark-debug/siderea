@@ -70,6 +70,7 @@ dependencies {
     implementation(project(":core:ui"))
     implementation(project(":core:camera"))
     implementation(project(":core:data"))
+    implementation(project(":core:capture"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

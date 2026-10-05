@@ -54,6 +54,7 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onOpenInspector: () -> Unit,
     onOpenLicenses: () -> Unit,
+    onOpenSessions: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
@@ -97,6 +98,20 @@ fun SettingsScreen(
                 }
             }
             item { SectionLabel(stringResource(R.string.settings_tools)) }
+            item {
+                SideriaCard(onClick = onOpenSessions) {
+                    Text(
+                        stringResource(R.string.settings_sessions),
+                        style = Siderea.text.readout,
+                        color = Siderea.palette.onBackground,
+                    )
+                    Text(
+                        stringResource(R.string.settings_sessions_hint),
+                        style = Siderea.text.readoutSmall,
+                        color = Siderea.palette.onSurfaceMuted,
+                    )
+                }
+            }
             item {
                 SideriaCard(onClick = onOpenInspector) {
                     Text(

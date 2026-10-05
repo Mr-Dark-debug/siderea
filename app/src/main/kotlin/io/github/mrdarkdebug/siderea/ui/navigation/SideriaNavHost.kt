@@ -6,10 +6,13 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.toRoute
 import io.github.mrdarkdebug.siderea.core.ui.theme.SideriaMotion
 import io.github.mrdarkdebug.siderea.device.ShutterKeyBus
 import io.github.mrdarkdebug.siderea.ui.camera.CameraScreen
 import io.github.mrdarkdebug.siderea.ui.inspector.InspectorScreen
+import io.github.mrdarkdebug.siderea.ui.sessions.SessionDetailScreen
+import io.github.mrdarkdebug.siderea.ui.sessions.SessionsScreen
 import io.github.mrdarkdebug.siderea.ui.settings.LicensesScreen
 import io.github.mrdarkdebug.siderea.ui.settings.SettingsScreen
 import kotlinx.serialization.Serializable
@@ -19,6 +22,14 @@ data object CameraRoute
 
 @Serializable
 data object InspectorRoute
+
+@Serializable
+data object SessionsRoute
+
+@Serializable
+data class SessionRoute(
+    val id: String,
+)
 
 @Serializable
 data object SettingsRoute
@@ -41,8 +52,18 @@ fun SideriaNavHost(keys: ShutterKeyBus) {
         composable<CameraRoute> {
             CameraScreen(
                 onOpenSettings = { navController.navigate(SettingsRoute) },
+                onOpenSessions = { id -> navController.navigate(if (id == null) SessionsRoute else SessionRoute(id)) },
                 keys = keys,
             )
+        }
+        composable<SessionsRoute> {
+            SessionsScreen(
+                onBack = { navController.popBackStack() },
+                onOpen = { id -> navController.navigate(SessionRoute(id)) },
+            )
+        }
+        composable<SessionRoute> { entry ->
+            SessionDetailScreen(id = entry.toRoute<SessionRoute>().id, onBack = { navController.popBackStack() })
         }
         composable<InspectorRoute> {
             InspectorScreen(onBack = { navController.popBackStack() })
@@ -52,6 +73,7 @@ fun SideriaNavHost(keys: ShutterKeyBus) {
                 onBack = { navController.popBackStack() },
                 onOpenInspector = { navController.navigate(InspectorRoute) },
                 onOpenLicenses = { navController.navigate(LicensesRoute) },
+                onOpenSessions = { navController.navigate(SessionsRoute) },
             )
         }
         composable<LicensesRoute> {

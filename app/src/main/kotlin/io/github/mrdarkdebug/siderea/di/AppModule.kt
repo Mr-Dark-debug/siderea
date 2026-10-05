@@ -10,9 +10,12 @@ import io.github.mrdarkdebug.siderea.core.camera.capability.CameraCapabilityRead
 import io.github.mrdarkdebug.siderea.core.camera.capability.CapabilityRepository
 import io.github.mrdarkdebug.siderea.core.camera.capability.CapabilitySource
 import io.github.mrdarkdebug.siderea.core.camera.engine.CameraEngine
+import io.github.mrdarkdebug.siderea.core.capture.session.SessionStore
 import io.github.mrdarkdebug.siderea.core.data.settings.CameraStateRepository
+import io.github.mrdarkdebug.siderea.core.data.settings.OverheadRepository
 import io.github.mrdarkdebug.siderea.core.data.settings.SettingsRepository
 import io.github.mrdarkdebug.siderea.core.data.settings.settingsDataStore
+import java.io.File
 import javax.inject.Singleton
 
 /**
@@ -50,4 +53,23 @@ object AppModule {
     fun cameraEngine(
         @ApplicationContext context: Context,
     ): CameraEngine = CameraEngine(context)
+
+    @Provides
+    @Singleton
+    fun overheadRepository(
+        @ApplicationContext context: Context,
+    ): OverheadRepository = OverheadRepository(context.settingsDataStore())
+
+    /**
+     * Sessions live in app-specific storage: no permission needed, private to Siderea, and exported to the
+     * gallery only when the user asks.
+     */
+    @Provides
+    @Singleton
+    fun sessionStore(
+        @ApplicationContext context: Context,
+    ): SessionStore =
+        SessionStore(
+            context.getExternalFilesDir(null)?.let { File(it, "Siderea") } ?: File(context.filesDir, "Siderea"),
+        )
 }

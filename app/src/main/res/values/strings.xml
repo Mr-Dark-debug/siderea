@@ -59,6 +59,8 @@
     <string name="settings_tools">Tools</string>
     <string name="settings_open_inspector">Capability Inspector</string>
     <string name="settings_open_inspector_hint">What each camera on this phone can really do.</string>
+    <string name="settings_sessions">Sessions</string>
+    <string name="settings_sessions_hint">Timelapses and other captures, with every frame and its real settings.</string>
     <string name="settings_data">Data</string>
     <string name="settings_reset">Reset settings</string>
     <string name="settings_reset_hint">Restores every setting to its default. Nothing you captured is touched.</string>
