@@ -2,6 +2,7 @@ package io.github.mrdarkdebug.siderea
 
 import android.graphics.Color
 import android.os.Bundle
+import android.view.KeyEvent
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -16,11 +17,15 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.mrdarkdebug.siderea.core.ui.theme.Siderea
 import io.github.mrdarkdebug.siderea.core.ui.theme.SideriaTheme
+import io.github.mrdarkdebug.siderea.device.ShutterKeyBus
 import io.github.mrdarkdebug.siderea.ui.navigation.SideriaNavHost
+import javax.inject.Inject
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     private val viewModel: MainViewModel by viewModels()
+
+    @Inject lateinit var shutterKeys: ShutterKeyBus
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,10 +43,20 @@ class MainActivity : ComponentActivity() {
             } else {
                 SideriaTheme(redMode = current.redMode, hapticsEnabled = current.hapticsEnabled) {
                     Box(Modifier.fillMaxSize().background(Siderea.palette.background)) {
-                        SideriaNavHost()
+                        SideriaNavHost(shutterKeys)
                     }
                 }
             }
         }
     }
+
+    override fun onKeyDown(
+        keyCode: Int,
+        event: KeyEvent,
+    ): Boolean = shutterKeys.onKeyDown(keyCode, event.repeatCount) || super.onKeyDown(keyCode, event)
+
+    override fun onKeyUp(
+        keyCode: Int,
+        event: KeyEvent,
+    ): Boolean = (shutterKeys.enabled && ShutterKeyBus.isShutterKey(keyCode)) || super.onKeyUp(keyCode, event)
 }

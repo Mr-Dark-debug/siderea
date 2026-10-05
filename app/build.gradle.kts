@@ -15,6 +15,10 @@ fun versionCodeFor(name: String): Int {
 }
 
 android {
+    sourceSets {
+        // One real-device fixture, shared by every module's unit tests.
+        getByName("test").resources.directories.add("../docs/device-reports")
+    }
     namespace = "io.github.mrdarkdebug.siderea"
 
     defaultConfig {
@@ -81,6 +85,7 @@ dependencies {
     androidTestImplementation(libs.androidx.test.core)
     androidTestImplementation(libs.androidx.test.ext.junit)
     androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.androidx.test.rules)
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 }

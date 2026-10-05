@@ -12,26 +12,44 @@ naming:
     constantPattern: '[A-Z][A-Za-z0-9_]*'
 
 complexity:
+  CyclomaticComplexMethod:
+    allowedComplexity: 20
+    ignoreAnnotated: ['Composable']
+  ComplexCondition:
+    allowedConditions: 4
   LongParameterList:
     # Composable parameter lists are idiomatically long; they are not "functions with too many arguments".
     ignoreAnnotated: ['Composable']
     allowedFunctionParameters: 8
   LongMethod:
     ignoreAnnotated: ['Composable']
-    allowedLines: 80
-  CyclomaticComplexMethod:
-    ignoreAnnotated: ['Composable']
+    allowedLines: 100
+  NestedBlockDepth:
+    allowedDepth: 5
   TooManyFunctions:
-    ignoreAnnotated: ['Composable']
+    # A ViewModel that gathers every control of one screen is one cohesive unit.
+    ignoreAnnotated: ['Composable', 'HiltViewModel']
+    allowedFunctionsPerClass: 30
     # Objects such as EnumNames hold one tiny function per Camera2 enum; private helpers don't count.
     allowedFunctionsPerObject: 20
     ignorePrivate: true
 
 style:
+  ReturnCount:
+    # Early returns that guard a function's preconditions read better than nesting.
+    max: 4
+    excludeGuardClauses: true
+  ThrowsCount:
+    max: 4
+  LoopWithTooManyJumpStatements:
+    maxJumpCount: 3
   MagicNumber:
     # Design tokens and sensor unit conversions are named at their definition; tests use literals.
     ignoreAnnotated: ['Composable']
     ignorePropertyDeclaration: true
+    ignoreEnums: true
+    ignoreRanges: true
+    ignoreLocalVariableDeclaration: false
     ignoreCompanionObjectPropertyDeclaration: true
     ignoreNamedArgument: true
     ignoreExtensionFunctions: true

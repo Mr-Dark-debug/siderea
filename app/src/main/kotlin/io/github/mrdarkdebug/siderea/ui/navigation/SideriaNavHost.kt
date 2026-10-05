@@ -7,14 +7,15 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import io.github.mrdarkdebug.siderea.core.ui.theme.SideriaMotion
-import io.github.mrdarkdebug.siderea.ui.home.HomeScreen
+import io.github.mrdarkdebug.siderea.device.ShutterKeyBus
+import io.github.mrdarkdebug.siderea.ui.camera.CameraScreen
 import io.github.mrdarkdebug.siderea.ui.inspector.InspectorScreen
 import io.github.mrdarkdebug.siderea.ui.settings.LicensesScreen
 import io.github.mrdarkdebug.siderea.ui.settings.SettingsScreen
 import kotlinx.serialization.Serializable
 
 @Serializable
-data object HomeRoute
+data object CameraRoute
 
 @Serializable
 data object InspectorRoute
@@ -26,21 +27,21 @@ data object SettingsRoute
 data object LicensesRoute
 
 @Composable
-fun SideriaNavHost() {
+fun SideriaNavHost(keys: ShutterKeyBus) {
     val navController = rememberNavController()
     NavHost(
         navController = navController,
-        startDestination = HomeRoute,
+        startDestination = CameraRoute,
         // Quiet cross-fades only: nothing slides or bounces in a dark field.
         enterTransition = { fadeIn(SideriaMotion.standard()) },
         exitTransition = { fadeOut(SideriaMotion.fast()) },
         popEnterTransition = { fadeIn(SideriaMotion.standard()) },
         popExitTransition = { fadeOut(SideriaMotion.fast()) },
     ) {
-        composable<HomeRoute> {
-            HomeScreen(
-                onOpenInspector = { navController.navigate(InspectorRoute) },
+        composable<CameraRoute> {
+            CameraScreen(
                 onOpenSettings = { navController.navigate(SettingsRoute) },
+                keys = keys,
             )
         }
         composable<InspectorRoute> {

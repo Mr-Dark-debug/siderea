@@ -9,6 +9,8 @@ import dagger.hilt.components.SingletonComponent
 import io.github.mrdarkdebug.siderea.core.camera.capability.CameraCapabilityReader
 import io.github.mrdarkdebug.siderea.core.camera.capability.CapabilityRepository
 import io.github.mrdarkdebug.siderea.core.camera.capability.CapabilitySource
+import io.github.mrdarkdebug.siderea.core.camera.engine.CameraEngine
+import io.github.mrdarkdebug.siderea.core.data.settings.CameraStateRepository
 import io.github.mrdarkdebug.siderea.core.data.settings.SettingsRepository
 import io.github.mrdarkdebug.siderea.core.data.settings.settingsDataStore
 import javax.inject.Singleton
@@ -35,4 +37,17 @@ object AppModule {
     @Provides
     @Singleton
     fun capabilityRepository(source: CapabilitySource): CapabilityRepository = CapabilityRepository(source)
+
+    @Provides
+    @Singleton
+    fun cameraStateRepository(
+        @ApplicationContext context: Context,
+    ): CameraStateRepository = CameraStateRepository(context.settingsDataStore())
+
+    /** One engine for the whole process: it owns the camera thread and at most one open camera. */
+    @Provides
+    @Singleton
+    fun cameraEngine(
+        @ApplicationContext context: Context,
+    ): CameraEngine = CameraEngine(context)
 }
