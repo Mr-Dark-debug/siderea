@@ -74,4 +74,23 @@ class CameraFormatTest {
         assertEquals("1", CameraFormat.number(1.0f, 1))
         assertEquals("5.64", CameraFormat.number(5.6448f, 2))
     }
+
+    @Test
+    fun `compact shutter and focus labels`() {
+        assertEquals("1/120", CameraFormat.shutterCompact(8_333_333))
+        assertEquals("1/2", CameraFormat.shutterCompact(500_000_000))
+        assertEquals("0.8\"", CameraFormat.shutterCompact(800_000_000))
+        assertEquals("16\"", CameraFormat.shutterCompact(16_000_000_000))
+        assertEquals("∞", CameraFormat.focusLabel(0f))
+        assertEquals("10 cm", CameraFormat.focusLabel(10f))
+        assertEquals("2 m", CameraFormat.focusLabel(0.5f))
+    }
+
+    @Test
+    fun `ev labels for dials`() {
+        assertEquals("+0.7", CameraFormat.evLabel(2f / 3f))
+        assertEquals("−1.3", CameraFormat.evLabel(-4f / 3f))
+        assertEquals("0.0", CameraFormat.evLabel(0f))
+        assertEquals("+2.0", CameraFormat.evLabel(2f))
+    }
 }

@@ -115,16 +115,44 @@ object FeatureVerdicts {
         }
     }
 
+    /**
+     * Manual focus needs a focus-distance key the HAL accepts and a lens that actually moves.
+     *
+     * A lens that moves is detected from its autofocus modes as well as from the nearest-focus value,
+     * because real phones (the Pixel 10 among them) report a null nearest-focus distance while having a
+     * working autofocus motor. An explicit 0 means the camera says it is fixed-focus.
+     */
     private fun manualFocus(c: CameraInfo): FeatureSupport {
         val title = "Manual focus"
         val minFocus = c.focus.minimumFocusDistanceDiopters
         val keyOk = c.requestKeys[KEY_FOCUS] != false
+        val lensMoves = c.modes.afModes.any { it != "OFF" } || (minFocus != null && minFocus > 0f)
+        val reportedFixed = minFocus != null && minFocus <= 0f
         return when {
-            minFocus == null || minFocus <= 0f || !keyOk -> {
+            !keyOk -> {
                 unsupported(
                     MANUAL_FOCUS,
                     title,
-                    "This lens is fixed-focus or doesn't accept a focus distance. Focus assist is unavailable here.",
+                    "This camera doesn't accept a focus distance. Siderea will use autofocus here.",
+                )
+            }
+
+            reportedFixed || !lensMoves -> {
+                unsupported(
+                    MANUAL_FOCUS,
+                    title,
+                    "This lens is fixed-focus. Focus assist is unavailable here; choose another lens for stars.",
+                )
+            }
+
+            minFocus == null -> {
+                FeatureSupport(
+                    MANUAL_FOCUS,
+                    title,
+                    SupportStatus.LIMITED,
+                    "Manual focus works, but this camera doesn't report its nearest focus distance. Siderea " +
+                        "assumes 10 cm and learns the real limit while autofocusing. Infinity is exact enough " +
+                        "for stars: confirm it with the zoomed preview and focus peaking.",
                 )
             }
 
@@ -187,8 +215,9 @@ object FeatureVerdicts {
                     KELVIN_WB,
                     title,
                     SupportStatus.LIMITED,
-                    "This camera doesn't report Android 16 CCT. Kelvin will be approximated through " +
-                        "colour-correction gains, which is less accurate.",
+                    "This camera doesn't offer Android 16 Kelvin/tint. Siderea computes white balance itself from " +
+                        "the sensor's colour calibration (gains and colour matrix): accurate in ordinary light, " +
+                        "not lab-grade.",
                 )
             }
 
@@ -217,22 +246,27 @@ object FeatureVerdicts {
             }
 
             sdkInt < ANDROID_16 -> {
-                unsupported(
-                    HYBRID_AE,
+                software(
                     title,
-                    "Needs Android 16. Fully manual and fully automatic exposure remain available.",
+                    "Android 16 adds hardware priority modes; on this phone Siderea provides its own " +
+                        "software auto-ISO and auto-shutter.",
                 )
             }
 
             else -> {
-                unsupported(
-                    HYBRID_AE,
+                software(
                     title,
-                    "This camera doesn't offer exposure priority modes. Use fully manual or automatic exposure.",
+                    "This camera has no exposure-priority modes, so Siderea provides its own " +
+                        "software auto-ISO and auto-shutter.",
                 )
             }
         }
     }
+
+    private fun software(
+        title: String,
+        detail: String,
+    ) = FeatureSupport(HYBRID_AE, title, SupportStatus.LIMITED, detail)
 
     private fun fullResolution(c: CameraInfo): FeatureSupport {
         val title = "Full-resolution sensor mode"

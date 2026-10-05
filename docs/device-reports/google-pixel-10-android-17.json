@@ -1,0 +1,1904 @@
+{
+ "_note": "Trimmed from the maintainer's Siderea v0.1.0 report: size lists shortened to the sizes that matter, the features list recomputed at test time. Values for ranges, modes, request keys, sensors and lenses are as reported.",
+ "schemaVersion": 1,
+ "generatedAt": "2026-10-05T00:36:17.791102Z",
+ "app": {
+  "name": "Siderea",
+  "versionName": "0.1.0",
+  "versionCode": 100
+ },
+ "device": {
+  "manufacturer": "Google",
+  "brand": "google",
+  "model": "Pixel 10",
+  "device": "frankel",
+  "product": "frankel",
+  "hardware": "frankel",
+  "androidRelease": "17",
+  "sdkInt": 37,
+  "securityPatch": "2026-09-05",
+  "fingerprint": "google/frankel/frankel:17/CP3A.260905.009/16091614:user/release-keys"
+ },
+ "cameraIdsListed": [
+  "0",
+  "1"
+ ],
+ "concurrentCameraSets": [
+  [
+   "0",
+   "1"
+  ]
+ ],
+ "cameras": [
+  {
+   "id": "0",
+   "kind": "LOGICAL",
+   "parentLogicalId": null,
+   "physicalIds": [
+    "2",
+    "3",
+    "4"
+   ],
+   "facing": "BACK",
+   "hardwareLevel": "FULL",
+   "capabilities": [
+    "BACKWARD_COMPATIBLE",
+    "BURST_CAPTURE",
+    "CONSTRAINED_HIGH_SPEED_VIDEO",
+    "DYNAMIC_RANGE_TEN_BIT",
+    "LOGICAL_MULTI_CAMERA",
+    "MANUAL_POST_PROCESSING",
+    "MANUAL_SENSOR",
+    "RAW",
+    "READ_SENSOR_SETTINGS",
+    "STREAM_USE_CASE"
+   ],
+   "manualSensor": true,
+   "raw": true,
+   "lens": {
+    "focalLengthsMm": [
+     4.53
+    ],
+    "equivalentFocalLengthsMm": [
+     24.5
+    ],
+    "zoomLabel": "1x",
+    "zoomRatioToMain": 1.0,
+    "apertures": [
+     1.7
+    ],
+    "opticalStabilization": [
+     "OFF",
+     "ON"
+    ],
+    "controlZoomRatioMin": 0.5557734,
+    "controlZoomRatioMax": 20.0,
+    "poseReference": null
+   },
+   "sensor": {
+    "physicalWidthMm": 6.4,
+    "physicalHeightMm": 4.8,
+    "pixelArrayWidth": 4000,
+    "pixelArrayHeight": 3000,
+    "activeArrayWidth": 4000,
+    "activeArrayHeight": 3000,
+    "megapixels": 12.0,
+    "pixelPitchMicrons": 1.6,
+    "colorFilterArrangement": "GRBG",
+    "whiteLevel": 1023,
+    "blackLevelPattern": [
+     64,
+     64,
+     64,
+     64
+    ],
+    "orientationDegrees": 90,
+    "timestampSource": "REALTIME",
+    "lensShadingApplied": false,
+    "ultraHighResolutionSensor": false
+   },
+   "exposure": {
+    "exposureTimeMinNs": 56968,
+    "exposureTimeMaxNs": 16000002085,
+    "isoMin": 30,
+    "isoMax": 7518,
+    "maxFrameDurationNs": 16000002085,
+    "aeCompensationMin": -24,
+    "aeCompensationMax": 24,
+    "aeCompensationStep": 0.16666666666666666
+   },
+   "focus": {
+    "minimumFocusDistanceDiopters": null,
+    "hyperfocalDiopters": null,
+    "calibration": "APPROXIMATE"
+   },
+   "outputs": {
+    "rawSizes": [
+     {
+      "width": 4000,
+      "height": 3000
+     },
+     {
+      "width": 4000,
+      "height": 2256
+     },
+     {
+      "width": 2000,
+      "height": 1500
+     },
+     {
+      "width": 2000,
+      "height": 1128
+     }
+    ],
+    "jpegSizes": [
+     {
+      "width": 4000,
+      "height": 3000
+     },
+     {
+      "width": 4000,
+      "height": 2256
+     },
+     {
+      "width": 3840,
+      "height": 2160
+     },
+     {
+      "width": 4000,
+      "height": 2000
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "yuvSizes": [
+     {
+      "width": 4000,
+      "height": 3000
+     },
+     {
+      "width": 4000,
+      "height": 2256
+     },
+     {
+      "width": 3840,
+      "height": 2160
+     },
+     {
+      "width": 4000,
+      "height": 2000
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "maxResolutionRawSizes": [],
+    "maxResolutionJpegSizes": [],
+    "maxResolutionYuvSizes": []
+   },
+   "modes": {
+    "aeModes": [
+     "OFF",
+     "ON",
+     "ON_AUTO_FLASH",
+     "ON_ALWAYS_FLASH",
+     "ON_LOW_LIGHT_BOOST_BRIGHTNESS_PRIORITY"
+    ],
+    "awbModes": [
+     "OFF",
+     "AUTO",
+     "INCANDESCENT",
+     "FLUORESCENT",
+     "WARM_FLUORESCENT",
+     "DAYLIGHT",
+     "CLOUDY_DAYLIGHT",
+     "TWILIGHT",
+     "SHADE"
+    ],
+    "afModes": [
+     "OFF",
+     "AUTO",
+     "MACRO",
+     "CONTINUOUS_VIDEO",
+     "CONTINUOUS_PICTURE",
+     "EDOF"
+    ],
+    "noiseReductionModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "edgeModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "hotPixelModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "colorCorrectionModes": [
+     "TRANSFORM_MATRIX",
+     "FAST",
+     "HIGH_QUALITY"
+    ]
+   },
+   "android16": {
+    "platformHasApi36": true,
+    "cctSupported": false,
+    "cctKelvinMin": null,
+    "cctKelvinMax": null,
+    "colorTintKeyAvailable": false,
+    "hybridAeSupported": false,
+    "aePriorityModes": [
+     "OFF"
+    ]
+   },
+   "extensions": [
+    "NIGHT"
+   ],
+   "requestKeys": {
+    "android.sensor.exposureTime": true,
+    "android.sensor.sensitivity": true,
+    "android.sensor.frameDuration": true,
+    "android.lens.focusDistance": true,
+    "android.colorCorrection.colorTemperature": false,
+    "android.colorCorrection.colorTint": false,
+    "android.colorCorrection.gains": true,
+    "android.colorCorrection.transform": true,
+    "android.control.aePriorityMode": false,
+    "android.control.zoomRatio": true,
+    "android.control.aeLock": true,
+    "android.control.awbLock": true,
+    "android.noiseReduction.mode": true,
+    "android.hotPixel.mode": true,
+    "android.statistics.lensShadingMapMode": true
+   },
+   "features": [],
+   "error": null
+  },
+  {
+   "id": "1",
+   "kind": "LOGICAL",
+   "parentLogicalId": null,
+   "physicalIds": [
+    "5",
+    "6"
+   ],
+   "facing": "FRONT",
+   "hardwareLevel": "FULL",
+   "capabilities": [
+    "BACKWARD_COMPATIBLE",
+    "BURST_CAPTURE",
+    "DYNAMIC_RANGE_TEN_BIT",
+    "LOGICAL_MULTI_CAMERA",
+    "MANUAL_POST_PROCESSING",
+    "MANUAL_SENSOR",
+    "RAW",
+    "READ_SENSOR_SETTINGS",
+    "STREAM_USE_CASE"
+   ],
+   "manualSensor": true,
+   "raw": true,
+   "lens": {
+    "focalLengthsMm": [
+     2.74
+    ],
+    "equivalentFocalLengthsMm": [
+     23.0
+    ],
+    "zoomLabel": "1x",
+    "zoomRatioToMain": 1.0,
+    "apertures": [
+     2.2
+    ],
+    "opticalStabilization": [
+     "OFF"
+    ],
+    "controlZoomRatioMin": 0.8958333,
+    "controlZoomRatioMax": 10.0,
+    "poseReference": null
+   },
+   "sensor": {
+    "physicalWidthMm": 4.1968,
+    "physicalHeightMm": 2.98656,
+    "pixelArrayWidth": 3440,
+    "pixelArrayHeight": 2448,
+    "activeArrayWidth": 3440,
+    "activeArrayHeight": 2448,
+    "megapixels": 8.42112,
+    "pixelPitchMicrons": 1.22,
+    "colorFilterArrangement": "GRBG",
+    "whiteLevel": 1023,
+    "blackLevelPattern": [
+     64,
+     64,
+     64,
+     64
+    ],
+    "orientationDegrees": 270,
+    "timestampSource": "REALTIME",
+    "lensShadingApplied": false,
+    "ultraHighResolutionSensor": false
+   },
+   "exposure": {
+    "exposureTimeMinNs": 46377,
+    "exposureTimeMaxNs": 1000000932,
+    "isoMin": 45,
+    "isoMax": 4324,
+    "maxFrameDurationNs": 1000000932,
+    "aeCompensationMin": -24,
+    "aeCompensationMax": 24,
+    "aeCompensationStep": 0.16666666666666666
+   },
+   "focus": {
+    "minimumFocusDistanceDiopters": null,
+    "hyperfocalDiopters": null,
+    "calibration": "APPROXIMATE"
+   },
+   "outputs": {
+    "rawSizes": [
+     {
+      "width": 3440,
+      "height": 2448
+     }
+    ],
+    "jpegSizes": [
+     {
+      "width": 3440,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "yuvSizes": [
+     {
+      "width": 3440,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "maxResolutionRawSizes": [],
+    "maxResolutionJpegSizes": [],
+    "maxResolutionYuvSizes": []
+   },
+   "modes": {
+    "aeModes": [
+     "OFF",
+     "ON",
+     "ON_LOW_LIGHT_BOOST_BRIGHTNESS_PRIORITY"
+    ],
+    "awbModes": [
+     "OFF",
+     "AUTO",
+     "INCANDESCENT",
+     "FLUORESCENT",
+     "WARM_FLUORESCENT",
+     "DAYLIGHT",
+     "CLOUDY_DAYLIGHT",
+     "TWILIGHT",
+     "SHADE"
+    ],
+    "afModes": [
+     "OFF",
+     "AUTO",
+     "MACRO",
+     "CONTINUOUS_VIDEO",
+     "CONTINUOUS_PICTURE",
+     "EDOF"
+    ],
+    "noiseReductionModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "edgeModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "hotPixelModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "colorCorrectionModes": [
+     "TRANSFORM_MATRIX",
+     "FAST",
+     "HIGH_QUALITY"
+    ]
+   },
+   "android16": {
+    "platformHasApi36": true,
+    "cctSupported": false,
+    "cctKelvinMin": null,
+    "cctKelvinMax": null,
+    "colorTintKeyAvailable": false,
+    "hybridAeSupported": false,
+    "aePriorityModes": [
+     "OFF"
+    ]
+   },
+   "extensions": [
+    "NIGHT"
+   ],
+   "requestKeys": {
+    "android.sensor.exposureTime": true,
+    "android.sensor.sensitivity": true,
+    "android.sensor.frameDuration": true,
+    "android.lens.focusDistance": true,
+    "android.colorCorrection.colorTemperature": false,
+    "android.colorCorrection.colorTint": false,
+    "android.colorCorrection.gains": true,
+    "android.colorCorrection.transform": true,
+    "android.control.aePriorityMode": false,
+    "android.control.zoomRatio": true,
+    "android.control.aeLock": true,
+    "android.control.awbLock": true,
+    "android.noiseReduction.mode": true,
+    "android.hotPixel.mode": true,
+    "android.statistics.lensShadingMapMode": true
+   },
+   "features": [],
+   "error": null
+  },
+  {
+   "id": "2",
+   "kind": "PHYSICAL",
+   "parentLogicalId": "0",
+   "physicalIds": [],
+   "facing": "BACK",
+   "hardwareLevel": "FULL",
+   "capabilities": [
+    "BACKWARD_COMPATIBLE",
+    "BURST_CAPTURE",
+    "DYNAMIC_RANGE_TEN_BIT",
+    "MANUAL_POST_PROCESSING",
+    "MANUAL_SENSOR",
+    "RAW",
+    "READ_SENSOR_SETTINGS",
+    "STREAM_USE_CASE",
+    "CONSTRAINED_HIGH_SPEED_VIDEO"
+   ],
+   "manualSensor": true,
+   "raw": true,
+   "lens": {
+    "focalLengthsMm": [
+     4.53
+    ],
+    "equivalentFocalLengthsMm": [
+     24.5
+    ],
+    "zoomLabel": "1x",
+    "zoomRatioToMain": 1.0,
+    "apertures": [
+     1.7
+    ],
+    "opticalStabilization": [
+     "OFF",
+     "ON"
+    ],
+    "controlZoomRatioMin": 1.0,
+    "controlZoomRatioMax": 20.0,
+    "poseReference": null
+   },
+   "sensor": {
+    "physicalWidthMm": 6.4,
+    "physicalHeightMm": 4.8,
+    "pixelArrayWidth": 4000,
+    "pixelArrayHeight": 3000,
+    "activeArrayWidth": 4000,
+    "activeArrayHeight": 3000,
+    "megapixels": 12.0,
+    "pixelPitchMicrons": 1.6,
+    "colorFilterArrangement": "GRBG",
+    "whiteLevel": 1023,
+    "blackLevelPattern": [
+     64,
+     64,
+     64,
+     64
+    ],
+    "orientationDegrees": 90,
+    "timestampSource": "REALTIME",
+    "lensShadingApplied": false,
+    "ultraHighResolutionSensor": false
+   },
+   "exposure": {
+    "exposureTimeMinNs": 56968,
+    "exposureTimeMaxNs": 16000002085,
+    "isoMin": 30,
+    "isoMax": 7518,
+    "maxFrameDurationNs": 16000002085,
+    "aeCompensationMin": -24,
+    "aeCompensationMax": 24,
+    "aeCompensationStep": 0.16666666666666666
+   },
+   "focus": {
+    "minimumFocusDistanceDiopters": null,
+    "hyperfocalDiopters": null,
+    "calibration": "APPROXIMATE"
+   },
+   "outputs": {
+    "rawSizes": [
+     {
+      "width": 4000,
+      "height": 3000
+     },
+     {
+      "width": 4000,
+      "height": 2256
+     },
+     {
+      "width": 2000,
+      "height": 1500
+     },
+     {
+      "width": 2000,
+      "height": 1128
+     }
+    ],
+    "jpegSizes": [
+     {
+      "width": 4000,
+      "height": 3000
+     },
+     {
+      "width": 4000,
+      "height": 2256
+     },
+     {
+      "width": 3840,
+      "height": 2160
+     },
+     {
+      "width": 4000,
+      "height": 2000
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "yuvSizes": [
+     {
+      "width": 4000,
+      "height": 3000
+     },
+     {
+      "width": 4000,
+      "height": 2256
+     },
+     {
+      "width": 3840,
+      "height": 2160
+     },
+     {
+      "width": 4000,
+      "height": 2000
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "maxResolutionRawSizes": [],
+    "maxResolutionJpegSizes": [],
+    "maxResolutionYuvSizes": []
+   },
+   "modes": {
+    "aeModes": [
+     "OFF",
+     "ON",
+     "ON_AUTO_FLASH",
+     "ON_ALWAYS_FLASH",
+     "ON_LOW_LIGHT_BOOST_BRIGHTNESS_PRIORITY"
+    ],
+    "awbModes": [
+     "OFF",
+     "AUTO",
+     "INCANDESCENT",
+     "FLUORESCENT",
+     "WARM_FLUORESCENT",
+     "DAYLIGHT",
+     "CLOUDY_DAYLIGHT",
+     "TWILIGHT",
+     "SHADE"
+    ],
+    "afModes": [
+     "OFF",
+     "AUTO",
+     "MACRO",
+     "CONTINUOUS_VIDEO",
+     "CONTINUOUS_PICTURE",
+     "EDOF"
+    ],
+    "noiseReductionModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "edgeModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "hotPixelModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "colorCorrectionModes": [
+     "TRANSFORM_MATRIX",
+     "FAST",
+     "HIGH_QUALITY"
+    ]
+   },
+   "android16": {
+    "platformHasApi36": true,
+    "cctSupported": false,
+    "cctKelvinMin": null,
+    "cctKelvinMax": null,
+    "colorTintKeyAvailable": false,
+    "hybridAeSupported": false,
+    "aePriorityModes": []
+   },
+   "extensions": [],
+   "requestKeys": {
+    "android.sensor.exposureTime": true,
+    "android.sensor.sensitivity": true,
+    "android.sensor.frameDuration": true,
+    "android.lens.focusDistance": true,
+    "android.colorCorrection.colorTemperature": false,
+    "android.colorCorrection.colorTint": false,
+    "android.colorCorrection.gains": true,
+    "android.colorCorrection.transform": true,
+    "android.control.aePriorityMode": false,
+    "android.control.zoomRatio": true,
+    "android.control.aeLock": true,
+    "android.control.awbLock": true,
+    "android.noiseReduction.mode": true,
+    "android.hotPixel.mode": true,
+    "android.statistics.lensShadingMapMode": true
+   },
+   "features": [],
+   "error": null
+  },
+  {
+   "id": "3",
+   "kind": "PHYSICAL",
+   "parentLogicalId": "0",
+   "physicalIds": [],
+   "facing": "BACK",
+   "hardwareLevel": "FULL",
+   "capabilities": [
+    "BACKWARD_COMPATIBLE",
+    "BURST_CAPTURE",
+    "DYNAMIC_RANGE_TEN_BIT",
+    "MANUAL_POST_PROCESSING",
+    "MANUAL_SENSOR",
+    "RAW",
+    "READ_SENSOR_SETTINGS",
+    "STREAM_USE_CASE",
+    "CONSTRAINED_HIGH_SPEED_VIDEO"
+   ],
+   "manualSensor": true,
+   "raw": true,
+   "lens": {
+    "focalLengthsMm": [
+     1.854
+    ],
+    "equivalentFocalLengthsMm": [
+     13.7
+    ],
+    "zoomLabel": "0.6x",
+    "zoomRatioToMain": 0.5580566,
+    "apertures": [
+     2.2
+    ],
+    "opticalStabilization": [
+     "OFF"
+    ],
+    "controlZoomRatioMin": 1.0,
+    "controlZoomRatioMax": 8.0,
+    "poseReference": null
+   },
+   "sensor": {
+    "physicalWidthMm": 4.71296,
+    "physicalHeightMm": 3.4944,
+    "pixelArrayWidth": 4208,
+    "pixelArrayHeight": 3120,
+    "activeArrayWidth": 4208,
+    "activeArrayHeight": 3120,
+    "megapixels": 13.12896,
+    "pixelPitchMicrons": 1.12,
+    "colorFilterArrangement": "RGGB",
+    "whiteLevel": 1023,
+    "blackLevelPattern": [
+     64,
+     64,
+     64,
+     64
+    ],
+    "orientationDegrees": 90,
+    "timestampSource": "REALTIME",
+    "lensShadingApplied": false,
+    "ultraHighResolutionSensor": false
+   },
+   "exposure": {
+    "exposureTimeMinNs": 11546,
+    "exposureTimeMaxNs": 16000001544,
+    "isoMin": 52,
+    "isoMax": 5000,
+    "maxFrameDurationNs": 16000001544,
+    "aeCompensationMin": -24,
+    "aeCompensationMax": 24,
+    "aeCompensationStep": 0.16666666666666666
+   },
+   "focus": {
+    "minimumFocusDistanceDiopters": null,
+    "hyperfocalDiopters": null,
+    "calibration": "APPROXIMATE"
+   },
+   "outputs": {
+    "rawSizes": [
+     {
+      "width": 4208,
+      "height": 3120
+     },
+     {
+      "width": 2104,
+      "height": 1560
+     },
+     {
+      "width": 2104,
+      "height": 1184
+     }
+    ],
+    "jpegSizes": [
+     {
+      "width": 4208,
+      "height": 3120
+     },
+     {
+      "width": 4032,
+      "height": 3024
+     },
+     {
+      "width": 4000,
+      "height": 3000
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "yuvSizes": [
+     {
+      "width": 4208,
+      "height": 3120
+     },
+     {
+      "width": 4032,
+      "height": 3024
+     },
+     {
+      "width": 4000,
+      "height": 3000
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "maxResolutionRawSizes": [],
+    "maxResolutionJpegSizes": [],
+    "maxResolutionYuvSizes": []
+   },
+   "modes": {
+    "aeModes": [
+     "OFF",
+     "ON",
+     "ON_AUTO_FLASH",
+     "ON_ALWAYS_FLASH",
+     "ON_LOW_LIGHT_BOOST_BRIGHTNESS_PRIORITY"
+    ],
+    "awbModes": [
+     "OFF",
+     "AUTO",
+     "INCANDESCENT",
+     "FLUORESCENT",
+     "WARM_FLUORESCENT",
+     "DAYLIGHT",
+     "CLOUDY_DAYLIGHT",
+     "TWILIGHT",
+     "SHADE"
+    ],
+    "afModes": [
+     "OFF"
+    ],
+    "noiseReductionModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "edgeModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "hotPixelModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "colorCorrectionModes": [
+     "TRANSFORM_MATRIX",
+     "FAST",
+     "HIGH_QUALITY"
+    ]
+   },
+   "android16": {
+    "platformHasApi36": true,
+    "cctSupported": false,
+    "cctKelvinMin": null,
+    "cctKelvinMax": null,
+    "colorTintKeyAvailable": false,
+    "hybridAeSupported": false,
+    "aePriorityModes": []
+   },
+   "extensions": [],
+   "requestKeys": {
+    "android.sensor.exposureTime": true,
+    "android.sensor.sensitivity": true,
+    "android.sensor.frameDuration": true,
+    "android.lens.focusDistance": true,
+    "android.colorCorrection.colorTemperature": false,
+    "android.colorCorrection.colorTint": false,
+    "android.colorCorrection.gains": true,
+    "android.colorCorrection.transform": true,
+    "android.control.aePriorityMode": false,
+    "android.control.zoomRatio": true,
+    "android.control.aeLock": true,
+    "android.control.awbLock": true,
+    "android.noiseReduction.mode": true,
+    "android.hotPixel.mode": true,
+    "android.statistics.lensShadingMapMode": true
+   },
+   "features": [],
+   "error": null
+  },
+  {
+   "id": "4",
+   "kind": "PHYSICAL",
+   "parentLogicalId": "0",
+   "physicalIds": [],
+   "facing": "BACK",
+   "hardwareLevel": "FULL",
+   "capabilities": [
+    "BACKWARD_COMPATIBLE",
+    "BURST_CAPTURE",
+    "DYNAMIC_RANGE_TEN_BIT",
+    "MANUAL_POST_PROCESSING",
+    "MANUAL_SENSOR",
+    "RAW",
+    "READ_SENSOR_SETTINGS",
+    "STREAM_USE_CASE"
+   ],
+   "manualSensor": true,
+   "raw": true,
+   "lens": {
+    "focalLengthsMm": [
+     14.2
+    ],
+    "equivalentFocalLengthsMm": [
+     104.3
+    ],
+    "zoomLabel": "5x",
+    "zoomRatioToMain": 4.5,
+    "apertures": [
+     3.05
+    ],
+    "opticalStabilization": [
+     "OFF",
+     "ON"
+    ],
+    "controlZoomRatioMin": 1.0,
+    "controlZoomRatioMax": 20.0,
+    "poseReference": null
+   },
+   "sensor": {
+    "physicalWidthMm": 4.85072,
+    "physicalHeightMm": 3.33792,
+    "pixelArrayWidth": 3976,
+    "pixelArrayHeight": 2736,
+    "activeArrayWidth": 3976,
+    "activeArrayHeight": 2736,
+    "megapixels": 10.87834,
+    "pixelPitchMicrons": 1.22,
+    "colorFilterArrangement": "BGGR",
+    "whiteLevel": 1023,
+    "blackLevelPattern": [
+     64,
+     64,
+     64,
+     64
+    ],
+    "orientationDegrees": 90,
+    "timestampSource": "REALTIME",
+    "lensShadingApplied": false,
+    "ultraHighResolutionSensor": false
+   },
+   "exposure": {
+    "exposureTimeMinNs": 46377,
+    "exposureTimeMaxNs": 16000000968,
+    "isoMin": 48,
+    "isoMax": 4615,
+    "maxFrameDurationNs": 16000000968,
+    "aeCompensationMin": -24,
+    "aeCompensationMax": 24,
+    "aeCompensationStep": 0.16666666666666666
+   },
+   "focus": {
+    "minimumFocusDistanceDiopters": null,
+    "hyperfocalDiopters": null,
+    "calibration": "APPROXIMATE"
+   },
+   "outputs": {
+    "rawSizes": [
+     {
+      "width": 3976,
+      "height": 2736
+     }
+    ],
+    "jpegSizes": [
+     {
+      "width": 3976,
+      "height": 2736
+     },
+     {
+      "width": 3840,
+      "height": 2160
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "yuvSizes": [
+     {
+      "width": 3976,
+      "height": 2736
+     },
+     {
+      "width": 3840,
+      "height": 2160
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "maxResolutionRawSizes": [],
+    "maxResolutionJpegSizes": [],
+    "maxResolutionYuvSizes": []
+   },
+   "modes": {
+    "aeModes": [
+     "OFF",
+     "ON",
+     "ON_AUTO_FLASH",
+     "ON_ALWAYS_FLASH",
+     "ON_LOW_LIGHT_BOOST_BRIGHTNESS_PRIORITY"
+    ],
+    "awbModes": [
+     "OFF",
+     "AUTO",
+     "INCANDESCENT",
+     "FLUORESCENT",
+     "WARM_FLUORESCENT",
+     "DAYLIGHT",
+     "CLOUDY_DAYLIGHT",
+     "TWILIGHT",
+     "SHADE"
+    ],
+    "afModes": [
+     "OFF",
+     "AUTO",
+     "MACRO",
+     "CONTINUOUS_VIDEO",
+     "CONTINUOUS_PICTURE",
+     "EDOF"
+    ],
+    "noiseReductionModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "edgeModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "hotPixelModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "colorCorrectionModes": [
+     "TRANSFORM_MATRIX",
+     "FAST",
+     "HIGH_QUALITY"
+    ]
+   },
+   "android16": {
+    "platformHasApi36": true,
+    "cctSupported": false,
+    "cctKelvinMin": null,
+    "cctKelvinMax": null,
+    "colorTintKeyAvailable": false,
+    "hybridAeSupported": false,
+    "aePriorityModes": []
+   },
+   "extensions": [],
+   "requestKeys": {
+    "android.sensor.exposureTime": true,
+    "android.sensor.sensitivity": true,
+    "android.sensor.frameDuration": true,
+    "android.lens.focusDistance": true,
+    "android.colorCorrection.colorTemperature": false,
+    "android.colorCorrection.colorTint": false,
+    "android.colorCorrection.gains": true,
+    "android.colorCorrection.transform": true,
+    "android.control.aePriorityMode": false,
+    "android.control.zoomRatio": true,
+    "android.control.aeLock": true,
+    "android.control.awbLock": true,
+    "android.noiseReduction.mode": true,
+    "android.hotPixel.mode": true,
+    "android.statistics.lensShadingMapMode": true
+   },
+   "features": [],
+   "error": null
+  },
+  {
+   "id": "5",
+   "kind": "PHYSICAL",
+   "parentLogicalId": "1",
+   "physicalIds": [],
+   "facing": "FRONT",
+   "hardwareLevel": "FULL",
+   "capabilities": [
+    "BACKWARD_COMPATIBLE",
+    "BURST_CAPTURE",
+    "DYNAMIC_RANGE_TEN_BIT",
+    "MANUAL_POST_PROCESSING",
+    "MANUAL_SENSOR",
+    "RAW",
+    "READ_SENSOR_SETTINGS",
+    "STREAM_USE_CASE",
+    "SECURE_IMAGE_DATA"
+   ],
+   "manualSensor": true,
+   "raw": true,
+   "lens": {
+    "focalLengthsMm": [
+     2.74
+    ],
+    "equivalentFocalLengthsMm": [
+     20.6
+    ],
+    "zoomLabel": "0.9x",
+    "zoomRatioToMain": 0.8954642,
+    "apertures": [
+     2.2
+    ],
+    "opticalStabilization": [
+     "OFF"
+    ],
+    "controlZoomRatioMin": 1.0,
+    "controlZoomRatioMax": 10.0,
+    "poseReference": null
+   },
+   "sensor": {
+    "physicalWidthMm": 4.6848,
+    "physicalHeightMm": 3.33792,
+    "pixelArrayWidth": 3840,
+    "pixelArrayHeight": 2736,
+    "activeArrayWidth": 3840,
+    "activeArrayHeight": 2736,
+    "megapixels": 10.50624,
+    "pixelPitchMicrons": 1.22,
+    "colorFilterArrangement": "GRBG",
+    "whiteLevel": 1023,
+    "blackLevelPattern": [
+     64,
+     64,
+     64,
+     64
+    ],
+    "orientationDegrees": 270,
+    "timestampSource": "REALTIME",
+    "lensShadingApplied": false,
+    "ultraHighResolutionSensor": false
+   },
+   "exposure": {
+    "exposureTimeMinNs": 47168,
+    "exposureTimeMaxNs": 1000000932,
+    "isoMin": 45,
+    "isoMax": 4324,
+    "maxFrameDurationNs": 1000000932,
+    "aeCompensationMin": -24,
+    "aeCompensationMax": 24,
+    "aeCompensationStep": 0.16666666666666666
+   },
+   "focus": {
+    "minimumFocusDistanceDiopters": null,
+    "hyperfocalDiopters": null,
+    "calibration": "APPROXIMATE"
+   },
+   "outputs": {
+    "rawSizes": [
+     {
+      "width": 3840,
+      "height": 2736
+     },
+     {
+      "width": 3840,
+      "height": 2232
+     },
+     {
+      "width": 1920,
+      "height": 1368
+     }
+    ],
+    "jpegSizes": [
+     {
+      "width": 3840,
+      "height": 2736
+     },
+     {
+      "width": 3840,
+      "height": 2160
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "yuvSizes": [
+     {
+      "width": 3840,
+      "height": 2736
+     },
+     {
+      "width": 3840,
+      "height": 2160
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "maxResolutionRawSizes": [],
+    "maxResolutionJpegSizes": [],
+    "maxResolutionYuvSizes": []
+   },
+   "modes": {
+    "aeModes": [
+     "OFF",
+     "ON",
+     "ON_LOW_LIGHT_BOOST_BRIGHTNESS_PRIORITY"
+    ],
+    "awbModes": [
+     "OFF",
+     "AUTO",
+     "INCANDESCENT",
+     "FLUORESCENT",
+     "WARM_FLUORESCENT",
+     "DAYLIGHT",
+     "CLOUDY_DAYLIGHT",
+     "TWILIGHT",
+     "SHADE"
+    ],
+    "afModes": [
+     "OFF",
+     "AUTO",
+     "MACRO",
+     "CONTINUOUS_VIDEO",
+     "CONTINUOUS_PICTURE",
+     "EDOF"
+    ],
+    "noiseReductionModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "edgeModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "hotPixelModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "colorCorrectionModes": [
+     "TRANSFORM_MATRIX",
+     "FAST",
+     "HIGH_QUALITY"
+    ]
+   },
+   "android16": {
+    "platformHasApi36": true,
+    "cctSupported": false,
+    "cctKelvinMin": null,
+    "cctKelvinMax": null,
+    "colorTintKeyAvailable": false,
+    "hybridAeSupported": false,
+    "aePriorityModes": []
+   },
+   "extensions": [],
+   "requestKeys": {
+    "android.sensor.exposureTime": true,
+    "android.sensor.sensitivity": true,
+    "android.sensor.frameDuration": true,
+    "android.lens.focusDistance": true,
+    "android.colorCorrection.colorTemperature": false,
+    "android.colorCorrection.colorTint": false,
+    "android.colorCorrection.gains": true,
+    "android.colorCorrection.transform": true,
+    "android.control.aePriorityMode": false,
+    "android.control.zoomRatio": true,
+    "android.control.aeLock": true,
+    "android.control.awbLock": true,
+    "android.noiseReduction.mode": true,
+    "android.hotPixel.mode": true,
+    "android.statistics.lensShadingMapMode": true
+   },
+   "features": [],
+   "error": null
+  },
+  {
+   "id": "6",
+   "kind": "PHYSICAL",
+   "parentLogicalId": "1",
+   "physicalIds": [],
+   "facing": "FRONT",
+   "hardwareLevel": "FULL",
+   "capabilities": [
+    "BACKWARD_COMPATIBLE",
+    "BURST_CAPTURE",
+    "DYNAMIC_RANGE_TEN_BIT",
+    "MANUAL_POST_PROCESSING",
+    "MANUAL_SENSOR",
+    "RAW",
+    "READ_SENSOR_SETTINGS",
+    "STREAM_USE_CASE"
+   ],
+   "manualSensor": true,
+   "raw": true,
+   "lens": {
+    "focalLengthsMm": [
+     2.74
+    ],
+    "equivalentFocalLengthsMm": [
+     23.0
+    ],
+    "zoomLabel": "1x",
+    "zoomRatioToMain": 1.0,
+    "apertures": [
+     2.2
+    ],
+    "opticalStabilization": [
+     "OFF"
+    ],
+    "controlZoomRatioMin": 1.0,
+    "controlZoomRatioMax": 8.0,
+    "poseReference": null
+   },
+   "sensor": {
+    "physicalWidthMm": 4.1968,
+    "physicalHeightMm": 2.98656,
+    "pixelArrayWidth": 3440,
+    "pixelArrayHeight": 2448,
+    "activeArrayWidth": 3440,
+    "activeArrayHeight": 2448,
+    "megapixels": 8.42112,
+    "pixelPitchMicrons": 1.22,
+    "colorFilterArrangement": "GRBG",
+    "whiteLevel": 1023,
+    "blackLevelPattern": [
+     64,
+     64,
+     64,
+     64
+    ],
+    "orientationDegrees": 270,
+    "timestampSource": "REALTIME",
+    "lensShadingApplied": false,
+    "ultraHighResolutionSensor": false
+   },
+   "exposure": {
+    "exposureTimeMinNs": 46377,
+    "exposureTimeMaxNs": 1000000932,
+    "isoMin": 45,
+    "isoMax": 4324,
+    "maxFrameDurationNs": 1000000932,
+    "aeCompensationMin": -24,
+    "aeCompensationMax": 24,
+    "aeCompensationStep": 0.16666666666666666
+   },
+   "focus": {
+    "minimumFocusDistanceDiopters": null,
+    "hyperfocalDiopters": null,
+    "calibration": "APPROXIMATE"
+   },
+   "outputs": {
+    "rawSizes": [
+     {
+      "width": 3440,
+      "height": 2448
+     }
+    ],
+    "jpegSizes": [
+     {
+      "width": 3440,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "yuvSizes": [
+     {
+      "width": 3440,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 2448
+     },
+     {
+      "width": 3264,
+      "height": 1836
+     },
+     {
+      "width": 2560,
+      "height": 1920
+     },
+     {
+      "width": 2688,
+      "height": 1512
+     },
+     {
+      "width": 1920,
+      "height": 1920
+     },
+     {
+      "width": 2560,
+      "height": 1280
+     },
+     {
+      "width": 2048,
+      "height": 1536
+     },
+     {
+      "width": 1920,
+      "height": 1440
+     },
+     {
+      "width": 1920,
+      "height": 1080
+     }
+    ],
+    "maxResolutionRawSizes": [],
+    "maxResolutionJpegSizes": [],
+    "maxResolutionYuvSizes": []
+   },
+   "modes": {
+    "aeModes": [
+     "OFF",
+     "ON",
+     "ON_LOW_LIGHT_BOOST_BRIGHTNESS_PRIORITY"
+    ],
+    "awbModes": [
+     "OFF",
+     "AUTO",
+     "INCANDESCENT",
+     "FLUORESCENT",
+     "WARM_FLUORESCENT",
+     "DAYLIGHT",
+     "CLOUDY_DAYLIGHT",
+     "TWILIGHT",
+     "SHADE"
+    ],
+    "afModes": [
+     "OFF",
+     "AUTO",
+     "MACRO",
+     "CONTINUOUS_VIDEO",
+     "CONTINUOUS_PICTURE",
+     "EDOF"
+    ],
+    "noiseReductionModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "edgeModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "hotPixelModes": [
+     "OFF",
+     "FAST",
+     "HIGH_QUALITY"
+    ],
+    "colorCorrectionModes": [
+     "TRANSFORM_MATRIX",
+     "FAST",
+     "HIGH_QUALITY"
+    ]
+   },
+   "android16": {
+    "platformHasApi36": true,
+    "cctSupported": false,
+    "cctKelvinMin": null,
+    "cctKelvinMax": null,
+    "colorTintKeyAvailable": false,
+    "hybridAeSupported": false,
+    "aePriorityModes": []
+   },
+   "extensions": [],
+   "requestKeys": {
+    "android.sensor.exposureTime": true,
+    "android.sensor.sensitivity": true,
+    "android.sensor.frameDuration": true,
+    "android.lens.focusDistance": true,
+    "android.colorCorrection.colorTemperature": false,
+    "android.colorCorrection.colorTint": false,
+    "android.colorCorrection.gains": true,
+    "android.colorCorrection.transform": true,
+    "android.control.aePriorityMode": false,
+    "android.control.zoomRatio": true,
+    "android.control.aeLock": true,
+    "android.control.awbLock": true,
+    "android.noiseReduction.mode": true,
+    "android.hotPixel.mode": true,
+    "android.statistics.lensShadingMapMode": true
+   },
+   "features": [],
+   "error": null
+  }
+ ],
+ "readErrors": []
+}

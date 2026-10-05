@@ -10,10 +10,18 @@ import kotlin.math.roundToInt
 object ZoomLabels {
     /** The focal length, in 35 mm terms, that phones treat as "the main camera". */
     private const val MAIN_LENS_TARGET_MM = 26.0
+    private const val FOUR_THIRDS = 4.0 / 3.0
+    private const val TENTH_STEPS = 10f
+    private const val HALF_STEPS = 2f
+    private const val LONG_FROM = 3f
 
     /**
-     * 35 mm-equivalent focal length: how wide the lens looks compared with a full-frame sensor.
-     * Returns null when the sensor size is not reported.
+     * 35 mm-equivalent focal length for the **4:3 stills Siderea shoots**.
+     *
+     * Many sensors are not exactly 4:3 (a Pixel 10 telephoto is 3976 x 2736), and a 4:3 photo crops the
+     * long side. Using the full sensor diagonal would make that lens look wider than the photo is, and
+     * the zoom label would disagree with the stock camera app (4.3x instead of 5x). So the diagonal of the
+     * 4:3 crop is used. Returns null when the sensor size is not reported.
      */
     fun equivalentFocalLengthMm(
         focalMm: Float,
@@ -21,8 +29,12 @@ object ZoomLabels {
         sensorHeightMm: Float?,
     ): Float? {
         if (!isPositive(sensorWidthMm) || !isPositive(sensorHeightMm)) return null
-        val sensorDiagonal = hypot(sensorWidthMm!!.toDouble(), sensorHeightMm!!.toDouble())
-        return (focalMm * CameraFormat.fullFrameDiagonalMm / sensorDiagonal).toFloat()
+        val width = sensorWidthMm!!.toDouble()
+        val height = sensorHeightMm!!.toDouble()
+        val cropWidth = minOf(width, height * FOUR_THIRDS)
+        val cropHeight = minOf(height, width / FOUR_THIRDS)
+        val cropDiagonal = hypot(cropWidth, cropHeight)
+        return (focalMm * CameraFormat.fullFrameDiagonalMm / cropDiagonal).toFloat()
     }
 
     private fun isPositive(value: Float?) = value != null && value > 0f
@@ -43,8 +55,8 @@ object ZoomLabels {
         require(ratio > 0f) { "ratio must be positive" }
         val rounded =
             when {
-                ratio < 1f -> (ratio * 10f).roundToInt() / 10f
-                ratio < 3f -> (ratio * 2f).roundToInt() / 2f
+                ratio < 1f -> (ratio * TENTH_STEPS).roundToInt() / TENTH_STEPS
+                ratio < LONG_FROM -> (ratio * HALF_STEPS).roundToInt() / HALF_STEPS
                 else -> ratio.roundToInt().toFloat()
             }
         val text =

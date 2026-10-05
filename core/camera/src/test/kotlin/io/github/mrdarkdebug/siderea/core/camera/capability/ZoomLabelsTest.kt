@@ -13,8 +13,19 @@ class ZoomLabelsTest {
     }
 
     @Test
-    fun `a full-frame sensor leaves the focal length unchanged`() {
-        assertEquals(50f, ZoomLabels.equivalentFocalLengthMm(50f, 36f, 24f)!!, 0.01f)
+    fun `equivalent focal length is measured on the 4 to 3 crop`() {
+        // A 3:2 full-frame sensor cropped to 4:3 is 32 x 24 mm, diagonal 40 mm (not 43.27 mm).
+        assertEquals(54.08f, ZoomLabels.equivalentFocalLengthMm(50f, 36f, 24f)!!, 0.05f)
+    }
+
+    @Test
+    fun `a pixel 10 telephoto reads as 5x like the stock camera`() {
+        // Real values from a Pixel 10 report: main 4.53 mm on 6.4 x 4.8, tele 14.2 mm on 4.85072 x 3.33792.
+        val main = ZoomLabels.equivalentFocalLengthMm(4.53f, 6.4f, 4.8f)!!
+        val tele = ZoomLabels.equivalentFocalLengthMm(14.2f, 4.85072f, 3.33792f)!!
+        val ultraWide = ZoomLabels.equivalentFocalLengthMm(1.854f, 4.71296f, 3.4944f)!!
+        assertEquals("5x", ZoomLabels.format(tele / main))
+        assertEquals("0.6x", ZoomLabels.format(ultraWide / main))
     }
 
     @Test

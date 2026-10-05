@@ -117,10 +117,31 @@ class FeatureVerdictsTest {
     }
 
     @Test
-    fun `hybrid AE is unsupported below Android 16 and without priority modes`() {
+    fun `hybrid AE is provided in software when the camera has no priority modes`() {
         val none = Samples.proCamera().copy(android16 = Android16Info(platformHasApi36 = true))
-        assertEquals(SupportStatus.UNSUPPORTED, verdicts(none).getValue(FeatureVerdicts.HYBRID_AE).status)
+        val onNewPhone = verdicts(none).getValue(FeatureVerdicts.HYBRID_AE)
+        assertEquals(SupportStatus.LIMITED, onNewPhone.status)
+        assertTrue(onNewPhone.detail.contains("software"))
         assertTrue(verdicts(none, sdk = 35).getValue(FeatureVerdicts.HYBRID_AE).detail.contains("Android 16"))
+    }
+
+    @Test
+    fun `a camera that moves its lens but hides its nearest focus distance still gets manual focus`() {
+        // Real behaviour of a Pixel 10: afModes include AUTO, minimumFocusDistance is null.
+        val camera = Samples.proCamera().copy(focus = FocusInfo(minimumFocusDistanceDiopters = null))
+        val verdict = verdicts(camera).getValue(FeatureVerdicts.MANUAL_FOCUS)
+        assertEquals(SupportStatus.LIMITED, verdict.status)
+        assertTrue(verdict.detail.contains("assumes 10 cm"))
+    }
+
+    @Test
+    fun `a camera with only the OFF autofocus mode and no focus distance is fixed focus`() {
+        val camera =
+            Samples.proCamera().copy(
+                focus = FocusInfo(minimumFocusDistanceDiopters = null),
+                modes = Samples.proCamera().modes.copy(afModes = listOf("OFF")),
+            )
+        assertEquals(SupportStatus.UNSUPPORTED, verdicts(camera).getValue(FeatureVerdicts.MANUAL_FOCUS).status)
     }
 
     @Test

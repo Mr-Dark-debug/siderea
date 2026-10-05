@@ -26,6 +26,15 @@ object CameraFormat {
 
     fun exposureSeconds(ns: Long): Double = ns / NS_PER_SECOND
 
+    /** Short shutter label for tight readouts: `1/120`, `0.8"`, `16"`. */
+    fun shutterCompact(ns: Long): String {
+        val text = exposure(ns).removeSuffix(" s")
+        return if (text.startsWith("1/")) text else "$text\""
+    }
+
+    /** Focus distance label for a dial: `∞`, `5 m`, `20 cm`. */
+    fun focusLabel(diopters: Float): String = if (diopters <= 0f) "∞" else distance(1f / diopters)
+
     /** Frame duration (ns) to the equivalent frame rate, e.g. `30 fps` or `0.03 fps`. */
     fun frameRate(frameDurationNs: Long): String {
         if (frameDurationNs <= 0) return "n/a"
@@ -67,6 +76,17 @@ object CameraFormat {
 
     fun aperture(f: Float): String = "f/${trimmed(f.toDouble(), 1)}"
 
+    /** Exposure compensation for a dial or readout: `+0.7`, `−1.3`, `0.0`. */
+    fun evLabel(stops: Float): String {
+        val tenths = (stops * TENTHS).roundToInt()
+        val magnitude = trimmed(abs(tenths) / TENTHS.toDouble(), 1).let { if (it.contains('.')) it else "$it.0" }
+        return when {
+            tenths > 0 -> "+$magnitude"
+            tenths < 0 -> "\u2212$magnitude"
+            else -> "0.0"
+        }
+    }
+
     /** Signed exposure-compensation value, in EV. */
     fun ev(
         steps: Int,
@@ -85,6 +105,7 @@ object CameraFormat {
     val fullFrameDiagonalMm: Double = hypot(36.0, 24.0)
 
     private const val CM_PER_METER = 100f
+    private const val TENTHS = 10f
     private const val MEGA = 1_000_000f
 
     private fun trimmed(
