@@ -33,6 +33,7 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 | ✅ | **M4** Astro: star trails, dark frames, aligned stacking | v0.5.0 | done, emulator-verified |
 | ✅ | **M5** Virtual Bulb long exposure | v0.6.0 | done, emulator-verified |
 | ✅ | **M6** Exposure ramp, polish, accessibility | v1.0.0 | done, emulator-verified |
+| ✅ | **M7** Simpler camera, calendar gallery, GitHub updates | v1.1.0 | emulator-verified; see validation report |
 
 > **Honest caveat.** Everything camera-related has been run on Android *emulators* and checked against a real
 > Pixel 10 *capability report*, but not yet on the phone itself. The first people to run it on hardware will
@@ -41,9 +42,9 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/camera.png" width="23%" alt="Viewfinder with histogram, level and readouts">
-  <img src="docs/screenshots/camera-manual-dial.png" width="23%" alt="Manual shutter ruler dial">
-  <img src="docs/screenshots/camera-red.png" width="23%" alt="Red night-vision mode">
+  <img src="docs/screenshots/camera-auto.png" width="23%" alt="Simplified Auto camera and large shutter">
+  <img src="docs/screenshots/gallery.png" width="23%" alt="Built-in gallery with date headings">
+  <img src="docs/screenshots/gallery-calendar.png" width="23%" alt="Calendar with markers for dates with photos">
   <img src="docs/screenshots/inspector.png" width="23%" alt="Capability Inspector">
 </p>
 <p align="center">
@@ -55,10 +56,17 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
   <img src="docs/screenshots/bulb-panel.png" width="23%" alt="Virtual bulb setup, warning that this camera has no manual shutter">
 </p>
 
-<sub>Captured on Android emulators, whose virtual cameras are simpler than a real phone's (the scene in the first
-shot is the emulator's test room). Real-device screenshots will replace these.</sub>
+<sub>Captured on Android emulators. The first three show v1.1.0 using the emulator's moving test pattern;
+the remaining screenshots document earlier capture features. Real-device screenshots will replace these.</sub>
 
-## What it does today (v1.0.0)
+## What it does today (v1.1.0)
+
+- **Simpler camera:** Auto and Pro, a larger viewfinder, compact lens selectors and a Tools sheet for
+  format, aspect and shooting aids. The shutter and built-in gallery stay one tap away.
+- **Built-in gallery:** photos and private session frames grouped by date, a month calendar with capture
+  markers, a swipeable/zoomable viewer, real file/capture details and sharing. No broad photo-library permission.
+- **GitHub updates:** automatic stable-release checks, unmetered downloads, verified APKs and Android-approved
+  installation. See [update and migration notes](docs/UPDATES.md).
 
 - **Manual photo mode** on Camera2: shutter, ISO, focus, white balance (presets or Kelvin + tint) and exposure
   compensation, each with Auto / Manual. Shutter and ISO combine into P / S / I / M behaviour.
@@ -152,8 +160,8 @@ Grab the APK from the [latest release](https://github.com/Mr-Dark-debug/siderea/
 your phone (allow installs from your browser or file manager when prompted). Verify it against the SHA-256 in
 the release notes.
 
-> Releases are **debug-signed** until a release key exists, so installing a later release-signed build means
-> uninstalling first. See [docs/RELEASING.md](docs/RELEASING.md).
+> v1.1.0 and future releases use a **persistent debug key**. The public v1.0.0 used a different key and may need
+> a one-time reinstall: export private sessions first. [Update and migration details](docs/UPDATES.md).
 
 ## Build from source
 

@@ -25,7 +25,7 @@ enum class CameraMode(
     PHOTO("PHOTO", null),
     TIMELAPSE("TIMELAPSE", null),
     ASTRO("ASTRO", null),
-    LONG_EXPOSURE("LONG EXPOSURE", null),
+    LONG_EXPOSURE("BULB", null),
     ;
 
     /** Modes that run a scheduled session in the foreground service instead of taking one photo. */
@@ -40,10 +40,10 @@ enum class ControlPanel { SHUTTER, ISO, EV, FOCUS, WB, AIDS, TIMELAPSE, ASTRO, B
 @Serializable
 data class Aids(
     val grid: GridMode = GridMode.OFF,
-    val level: Boolean = true,
+    val level: Boolean = false,
     val peaking: Boolean = false,
     val zebra: Boolean = false,
-    val histogram: Boolean = true,
+    val histogram: Boolean = false,
     /** Brighten the viewfinder only, so you can compose in the dark. The saved photo is unchanged. */
     val nightView: Boolean = false,
 )

@@ -39,6 +39,33 @@ class PhotoSaver
     constructor(
         @ApplicationContext private val context: Context,
     ) {
+        suspend fun latestUri(): String? =
+            withContext(Dispatchers.IO) {
+                runCatching {
+                    val collection = MediaStore.Images.Media.getContentUri(MediaStore.VOLUME_EXTERNAL)
+                    context.contentResolver
+                        .query(
+                            collection,
+                            arrayOf(MediaStore.Images.Media._ID),
+                            "${MediaStore.Images.Media.OWNER_PACKAGE_NAME} = ? AND " +
+                                "${MediaStore.Images.Media.RELATIVE_PATH} LIKE ? AND " +
+                                "${MediaStore.Images.Media.IS_PENDING} = 0",
+                            arrayOf(context.packageName, "Pictures/Siderea/%"),
+                            "${MediaStore.Images.Media.DATE_ADDED} DESC",
+                        )?.use {
+                            if (it.moveToFirst()) {
+                                android.content.ContentUris
+                                    .withAppendedId(
+                                        collection,
+                                        it.getLong(0),
+                                    ).toString()
+                            } else {
+                                null
+                            }
+                        }
+                }.getOrNull()
+            }
+
         suspend fun save(photo: CapturedPhoto): SavedPhoto =
             withContext(Dispatchers.IO) {
                 val base = "SIDEREA_" + LocalDateTime.now().format(STAMP)

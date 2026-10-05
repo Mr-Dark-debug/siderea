@@ -12,8 +12,10 @@ git push origin main v0.2.0
 
 ## Debug-signed vs release-signed
 
-Until the four signing secrets exist, the workflow still publishes an installable APK, but it is signed with
-the **debug key** and named `siderea-vX.Y.Z-debug-signed.apk`, with a banner in the release notes.
+Without release signing secrets, the workflow uses the persistent `DEBUG_KEYSTORE_BASE64` secret and names
+the APK `siderea-vX.Y.Z-debug-signed.apk`, with a banner in the release notes. It fails if neither a complete
+release key configuration nor a persistent debug key is available. Never generate a new key for each release.
+See [UPDATES.md](UPDATES.md) for the v1.0.0 migration and updater verification.
 
 Android refuses to update an app that is signed with a different key. So once you add a release key, the first
 release-signed build has to be installed after **uninstalling** any debug-signed one.

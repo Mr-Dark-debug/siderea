@@ -46,6 +46,8 @@ import io.github.mrdarkdebug.siderea.core.ui.components.SideriaTopBar
 import io.github.mrdarkdebug.siderea.core.ui.theme.Siderea
 import io.github.mrdarkdebug.siderea.core.ui.theme.SideriaDimens
 import io.github.mrdarkdebug.siderea.core.ui.theme.SideriaSpacing
+import io.github.mrdarkdebug.siderea.update.UpdateSettings
+import io.github.mrdarkdebug.siderea.update.UpdateViewModel
 
 private const val REPO_URL = "https://github.com/Mr-Dark-debug/siderea"
 
@@ -55,6 +57,8 @@ fun SettingsScreen(
     onOpenInspector: () -> Unit,
     onOpenLicenses: () -> Unit,
     onOpenSessions: () -> Unit,
+    onOpenGallery: () -> Unit,
+    updates: UpdateViewModel,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
@@ -98,6 +102,12 @@ fun SettingsScreen(
                 }
             }
             item { SectionLabel(stringResource(R.string.settings_tools)) }
+            item {
+                SideriaCard(onClick = onOpenGallery) {
+                    Text("Gallery", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
+                    Text("Photos, dates & details", color = Siderea.palette.onSurfaceMuted)
+                }
+            }
             item {
                 SideriaCard(onClick = onOpenSessions) {
                     Text(
@@ -143,6 +153,7 @@ fun SettingsScreen(
                 }
             }
             item { SectionLabel(stringResource(R.string.settings_about)) }
+            item { SideriaCard { UpdateSettings(updates) } }
             item {
                 SideriaCard {
                     KeyValueRow(stringResource(R.string.settings_version), version)
@@ -172,14 +183,6 @@ fun SettingsScreen(
                         modifier = Modifier.fillMaxWidth(),
                     )
                 }
-            }
-            item {
-                Text(
-                    text = stringResource(R.string.settings_more_coming),
-                    style = Siderea.text.readoutSmall,
-                    color = Siderea.palette.onSurfaceMuted,
-                    modifier = Modifier.padding(top = SideriaSpacing.lg),
-                )
             }
         }
     }

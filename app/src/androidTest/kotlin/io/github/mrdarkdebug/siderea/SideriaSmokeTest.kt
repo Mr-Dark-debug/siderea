@@ -10,6 +10,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isToggleable
 import androidx.compose.ui.test.junit4.ComposeContentTestRule
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performScrollToNode
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.platform.app.InstrumentationRegistry
 import androidx.test.rule.GrantPermissionRule
@@ -61,15 +63,16 @@ class SideriaSmokeTest {
     @Test
     fun cameraShowsTheReadoutRowAndModeStrip() {
         waitForCamera()
+        rule.onNodeWithText("Pro").performClick()
         listOf("SS", "ISO", "EV", "WB", "FOCUS").forEach { rule.waitUntilAtLeastOneExists(readout(it), 10_000) }
         rule.onNodeWithText("PHOTO").assertExists()
-        rule.onNodeWithText("LONG EXPOSURE").assertExists()
+        rule.onNodeWithText("BULB").assertExists()
     }
 
     @Test
     fun everyModeOnTheStripOpensItsOwnPanel() {
         waitForCamera()
-        rule.onNodeWithText("LONG EXPOSURE").performClick()
+        rule.onNodeWithText("BULB").performClick()
         rule.waitUntilAtLeastOneExists(hasText("TOTAL EXPOSURE"), 10_000)
         rule.onNodeWithText("ASTRO").performClick()
         rule.waitUntilAtLeastOneExists(hasText("GAP BETWEEN FRAMES"), 10_000)
@@ -80,6 +83,7 @@ class SideriaSmokeTest {
     @Test
     fun tappingAReadoutOpensItsPanelAndDoneClosesIt() {
         waitForCamera()
+        rule.onNodeWithText("Pro").performClick()
         rule.waitUntilAtLeastOneExists(readout("SS"), 10_000)
         rule.onNode(readout("SS")).performClick()
         rule.waitUntilExactlyOneExists(hasText("SHUTTER"), 5_000)
@@ -90,7 +94,8 @@ class SideriaSmokeTest {
     @Test
     fun theAidsPanelTogglesTheGrid() {
         waitForCamera()
-        rule.onNode(hasContentDescription("Viewfinder aids", substring = true)).performClick()
+        rule.onNode(hasContentDescription("Camera tools")).performClick()
+        rule.onNodeWithText("Grid & focus aids").performClick()
         rule.waitUntilExactlyOneExists(hasText("VIEWFINDER AIDS"), 5_000)
         rule.onNodeWithText("THIRDS").performClick()
         rule.onNodeWithText("DONE").performClick()
@@ -103,7 +108,7 @@ class SideriaSmokeTest {
         rule.onNode(hasContentDescription("Take photo")).performClick()
         rule.waitUntil(timeoutMillis = 30_000) { countSidereaPhotos() > before }
         assertTrue("a new photo should be in Pictures/Siderea", countSidereaPhotos() > before)
-        rule.waitUntilAtLeastOneExists(hasContentDescription("Last photo", substring = true), 10_000)
+        rule.waitUntilAtLeastOneExists(hasContentDescription("Gallery"), 10_000)
         deleteSidereaPhotos()
     }
 
@@ -194,6 +199,7 @@ class SideriaSmokeTest {
     @Test
     fun settingsOpensTheGeneratedLicensesList() {
         openSettings()
+        rule.onNode(hasScrollAction()).performScrollToNode(hasText("Open-source licenses"))
         rule.waitUntilExactlyOneExists(hasText("Open-source licenses"), timeoutMillis = 5_000)
         rule.onNodeWithText("Open-source licenses").performScrollTo().performClick()
         rule.waitUntilDoesNotExist(hasText("Reset settings"), timeoutMillis = 5_000)

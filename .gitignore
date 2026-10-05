@@ -30,3 +30,5 @@ signing.properties
 # Reports produced by the app and by tooling
 /report/
 /reports/
+/work/
+/.codex-remote-attachments/

@@ -66,7 +66,7 @@ class LongExposureFlowTest {
     @Test
     fun aBulbSessionRunsAndItsFramesCombineThreeWays() {
         rule.waitUntilAtLeastOneExists(hasContentDescription("Take photo"), timeoutMillis = 20_000)
-        rule.onNodeWithText("LONG EXPOSURE").performClick()
+        rule.onNodeWithText("BULB").performClick()
         rule.waitUntilAtLeastOneExists(hasText("TOTAL EXPOSURE"), 5_000)
         // The chip sits at the end of a scrolling row, so bring it into view first.
         rule.onNodeWithContentDescription("Until stopped").performScrollTo().performClick()

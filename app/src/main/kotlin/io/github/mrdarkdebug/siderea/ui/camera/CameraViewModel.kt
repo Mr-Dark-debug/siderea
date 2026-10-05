@@ -106,6 +106,10 @@ class CameraViewModel
         private var lastOpenKey: String? = null
 
         init {
+            viewModelScope.launch {
+                val uri = saver.latestUri()
+                mutableState.update { it.copy(lastPhotoUri = it.lastPhotoUri ?: uri) }
+            }
             viewModelScope.launch { capabilities.ensureLoaded() }
             viewModelScope.launch { capabilities.state.collect(::onCapabilities) }
             viewModelScope.launch { engine.state.collect(::onEngineState) }

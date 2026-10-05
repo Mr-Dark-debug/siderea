@@ -8,12 +8,16 @@ import android.graphics.SurfaceTexture
 import android.view.TextureView
 import android.view.View
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import io.github.mrdarkdebug.siderea.core.camera.analysis.FrameAnalysis
 import io.github.mrdarkdebug.siderea.core.camera.engine.AspectRatio
+import io.github.mrdarkdebug.siderea.core.ui.components.ChipButton
 import io.github.mrdarkdebug.siderea.core.ui.theme.Siderea
 import io.github.mrdarkdebug.siderea.core.ui.theme.SideriaShapes
 import io.github.mrdarkdebug.siderea.core.ui.theme.SideriaSpacing
@@ -136,6 +141,22 @@ fun Viewfinder(
             }
             state.panel?.let { panel ->
                 ControlPanelSheet(state, panel, actions, Modifier.align(Alignment.BottomCenter))
+            }
+            if (state.panel == null) {
+                Row(
+                    Modifier.align(Alignment.BottomCenter).padding(12.dp).horizontalScroll(rememberScrollState()),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    state.lenses.filter { it.facing == state.lens?.facing }.forEach { lens ->
+                        ChipButton(
+                            lens.zoomLabel,
+                            { actions.onSelectLens(lens.key) },
+                            selected = lens.key == state.lens?.key,
+                            enabled = !state.isCapturing,
+                            description = "${lens.zoomLabel} lens",
+                        )
+                    }
+                }
             }
         }
     }

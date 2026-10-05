@@ -4,6 +4,29 @@ All notable changes are recorded here. Each milestone lists **what works**, **wh
 real device**, and **known issues**. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.1.0] - 2026-10-05
+
+### Added and changed
+- A simpler camera with Auto/Pro controls, a larger viewfinder, lens pills, a centred shutter and a
+  Tools sheet. Format, aspect, night view, grid and focus aids remain available without crowding the screen.
+- Built-in gallery for app-owned shared photos and private session JPEG/RAW frames: date headings,
+  a month calendar with capture markers, day filters, swiping, pinch zoom, capture/file details and sharing.
+- GitHub update checks on foreground entry, six-hour throttling, optional automatic checks, unmetered
+  automatic downloads, mobile-data download buttons, progress/cancel/retry and Android-approved installation.
+- APK verification: exact release asset name, HTTPS/redirect limits, byte count, SHA-256, package,
+  increasing version code and matching signing certificate. Pending downloads survive restart and obsolete
+  installer files are removed after replacement.
+- Persistent CI signing. Releases fail if no persistent key is configured, instead of generating a new key.
+
+### Migration and limitations
+- The public v1.0.0 APK used a different ephemeral signing key. Export private sessions before a one-time
+  reinstall if Android refuses replacement. Shared photos remain on disk, but the reinstalled app may need
+  the system gallery to view old images whose Android ownership was removed. See [UPDATES.md](docs/UPDATES.md).
+- Android requires source-install permission and final installation approval; updates cannot install silently.
+- RAW previews depend on the device decoder; Open original remains available when a preview cannot be made.
+- Camera hardware behavior and OEM installers still need real-phone testing. Emulator evidence is recorded
+  in [the v1.1 validation report](docs/VALIDATION-1.1.md).
+
 ## [1.0.0] - 2026-10-05
 
 **Milestone M6: exposure ramp, polish, accessibility. First stable release.** Every feature in the original brief

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <paths>
+    <files-path name="updates" path="updates/" />
     <!-- Capability reports are written here before being shared. -->
     <cache-path name="reports" path="reports/" />
     <!-- Finished exports (video, zip, tiff) in a session's exports folder, shared from the session screen. -->

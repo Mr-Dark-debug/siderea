@@ -59,7 +59,7 @@ class AccessibilityTest {
         listOf(
             "TIMELAPSE" to "INTERVAL",
             "ASTRO" to "GAP BETWEEN FRAMES",
-            "LONG EXPOSURE" to "TOTAL EXPOSURE",
+            "BULB" to "TOTAL EXPOSURE",
         ).forEach {
             rule.onNodeWithText(it.first).performClick()
             rule.waitUntilAtLeastOneExists(hasText(it.second), 5_000)
@@ -70,6 +70,7 @@ class AccessibilityTest {
     @Test
     fun theManualControlPanelsPassTheChecks() {
         rule.enableAccessibilityChecks()
+        rule.onNodeWithText("Pro").performClick()
         listOf("SS", "ISO", "EV", "WB", "FOCUS").forEach { label ->
             rule.onNode(hasContentDescription("$label ", substring = true)).performClick()
             rule.waitForIdle()

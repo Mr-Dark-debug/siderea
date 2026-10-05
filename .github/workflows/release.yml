@@ -46,6 +46,7 @@ jobs:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          DEBUG_KEYSTORE_BASE64: ${{ secrets.DEBUG_KEYSTORE_BASE64 }}
         run: |
           if [ -n "$KEYSTORE_BASE64" ] && [ -n "$KEYSTORE_PASSWORD" ] && [ -n "$KEY_ALIAS" ] && [ -n "$KEY_PASSWORD" ]; then
             echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/siderea-release.jks"
@@ -56,9 +57,14 @@ jobs:
               echo "SIDEREA_KEY_PASSWORD=$KEY_PASSWORD"
               echo "SIGNED=release"
             } >> "$GITHUB_ENV"
-          else
+          elif [ -n "$DEBUG_KEYSTORE_BASE64" ]; then
+            mkdir -p "$HOME/.android"
+            echo "$DEBUG_KEYSTORE_BASE64" | base64 -d > "$HOME/.android/debug.keystore"
             echo "SIGNED=debug" >> "$GITHUB_ENV"
-            echo "::warning::Signing secrets are not set; publishing a debug-signed APK."
+            echo "::warning::Publishing with the persistent debug key. Keep this key for future updates."
+          else
+            echo "::error::Set a persistent release key or DEBUG_KEYSTORE_BASE64 before publishing."
+            exit 1
           fi
 
       - name: Verify and build
@@ -74,7 +80,7 @@ jobs:
             banner=""
           else
             name="siderea-v${VERSION}-debug-signed.apk"
-            banner="> **Debug-signed build.** Installable for testing, but signed with the debug key rather than a release key. When a release-signed build is published you will need to uninstall this one first."
+            banner="> **Debug-signed build.** Uses a persistent key for updates from v1.1 onward. The v1.0.0 public APK used a different key: export private sessions before the one-time reinstall. Shared photos stay in Pictures/Siderea."
           fi
           cp "$src" "$name"
           sha256sum "$name" > "$name.sha256"

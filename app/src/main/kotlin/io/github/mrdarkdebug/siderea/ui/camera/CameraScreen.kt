@@ -14,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -28,8 +29,15 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Cameraswitch
+import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Timer
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -38,6 +46,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -80,6 +89,8 @@ import kotlin.math.abs
 fun CameraScreen(
     onOpenSettings: () -> Unit,
     onOpenSessions: (String?) -> Unit,
+    onOpenGallery: () -> Unit,
+    onCaptureBusyChanged: (Boolean) -> Unit = {},
     keys: ShutterKeyBus,
     viewModel: CameraViewModel = hiltViewModel(),
 ) {
@@ -87,6 +98,10 @@ fun CameraScreen(
     val analysis by viewModel.analysis.collectAsStateWithLifecycle()
     val motion by viewModel.motionState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    LaunchedEffect(state.capture, state.run) {
+        onCaptureBusyChanged(state.isCapturing || state.run is RunState.Running)
+    }
+    DisposableEffect(Unit) { onDispose { onCaptureBusyChanged(false) } }
 
     val permissionLauncher =
         rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -139,7 +154,7 @@ fun CameraScreen(
                 onSelectMode = viewModel::selectMode,
                 onTapFocus = viewModel::tapToFocus,
                 onSettings = onOpenSettings,
-                onOpenLastPhoto = { state.lastPhotoUri?.let { openPhoto(context, it) } },
+                onOpenLastPhoto = onOpenGallery,
                 onDismissMessage = viewModel::dismissMessage,
                 onRetry = viewModel::retryOpen,
                 onTimelapse = viewModel::setTimelapse,
@@ -207,6 +222,7 @@ fun CameraScreen(
                 PermissionGate(
                     onAllow = { permissionLauncher.launch(Manifest.permission.CAMERA) },
                     onSettings = { openAppSettings(context) },
+                    onGallery = onOpenGallery,
                 )
             }
 
@@ -249,6 +265,7 @@ private fun openSystemScreen(
 private const val CHROME_MAX_FONT_SCALE = 1.25f
 
 @Composable
+@OptIn(ExperimentalMaterial3Api::class)
 private fun CameraContent(
     state: CameraUiState,
     analysis: io.github.mrdarkdebug.siderea.core.camera.analysis.FrameAnalysis?,
@@ -258,12 +275,38 @@ private fun CameraContent(
 ) {
     val bars = WindowInsets.statusBars.asPaddingValues()
     val nav = WindowInsets.navigationBars.asPaddingValues()
+    var pro by rememberSaveable { mutableStateOf(false) }
+    var tools by remember { mutableStateOf(false) }
+    LaunchedEffect(
+        state.settings.isShutterManual,
+        state.settings.isIsoManual,
+        state.settings.focusMode,
+        state.settings.whiteBalance.mode,
+    ) {
+        if (state.settings.isShutterManual || state.settings.isIsoManual ||
+            state.settings.focusMode == FocusMode.MANUAL || state.settings.whiteBalance.mode != WbMode.AUTO
+        ) {
+            pro = true
+        }
+    }
     Column(
         Modifier
             .fillMaxSize()
             .padding(top = bars.calculateTopPadding(), bottom = nav.calculateBottomPadding()),
     ) {
-        CappedFontScale(CHROME_MAX_FONT_SCALE) { TopRow(state, actions) }
+        CappedFontScale(CHROME_MAX_FONT_SCALE) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                IconTarget(Icons.Default.Settings, "Settings", actions.onSettings)
+                Spacer(Modifier.weight(1f))
+                ChipButton(
+                    if (state.timerSeconds == 0) "Timer off" else "${state.timerSeconds}s",
+                    actions.onCycleTimer,
+                    selected = state.timerSeconds > 0,
+                    description = timerDescription(state.timerSeconds),
+                )
+                IconTarget(Icons.Default.Tune, "Camera tools", { tools = true })
+            }
+        }
         Viewfinder(
             state = state,
             analysis = analysis,
@@ -281,57 +324,61 @@ private fun CameraContent(
         EngineProblem(state, actions.onRetry)
         CappedFontScale(CHROME_MAX_FONT_SCALE) {
             Column {
-                ReadoutRow(state, actions)
-                StatusLine(state)
+                Row(
+                    Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    ChipButton("Auto", {
+                        actions.onShutterManual(false)
+                        actions.onIsoManual(false)
+                        actions.onFocusManual(false)
+                        actions.onWhiteBalance(state.settings.whiteBalance.copy(mode = WbMode.AUTO))
+                        actions.onClosePanel()
+                        pro = false
+                    }, selected = !pro, modifier = Modifier.weight(1f))
+                    ChipButton("Pro", { pro = true }, selected = pro, modifier = Modifier.weight(1f))
+                    if (!pro) {
+                        ChipButton(CameraFormat.evLabel(state.settings.evStops), {
+                            actions.onTogglePanel(ControlPanel.EV)
+                        }, description = "EV exposure brightness")
+                    }
+                }
+                if (pro) ReadoutRow(state, actions)
+                if (state.device.thermalWarning) StatusLine(state)
                 ModeStrip(state.mode, actions.onSelectMode)
                 BottomRow(state, actions, viewModel)
             }
         }
     }
-}
-
-@Composable
-private fun TopRow(
-    state: CameraUiState,
-    actions: CameraActions,
-) {
-    Row(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = SideriaSpacing.sm, vertical = SideriaSpacing.xs),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(SideriaSpacing.xxs),
-    ) {
-        IconTarget(Icons.Default.Settings, "Settings", actions.onSettings)
-        Spacer(Modifier.weight(1f))
-        ChipButton(
-            CameraSettingsOps.formatLabel(state.settings.format),
-            actions.onCycleFormat,
-            description = "Photo format ${CameraSettingsOps.formatLabel(state.settings.format)}. Tap to change.",
-        )
-        ChipButton(
-            state.aspect.label,
-            actions.onCycleAspect,
-            description = "Frame shape ${state.aspect.label}. Tap to change.",
-        )
-        ChipButton(
-            if (state.timerSeconds == 0) "TIMER" else "${state.timerSeconds}s",
-            actions.onCycleTimer,
-            selected = state.timerSeconds > 0,
-            description = timerDescription(state.timerSeconds),
-        )
-        ChipButton(
-            "NIGHT",
-            { actions.onAids { it.copy(nightView = !it.nightView) } },
-            selected = state.aids.nightView,
-            description = "Night view: brighten the viewfinder only",
-        )
-        ChipButton(
-            "AIDS",
-            { actions.onTogglePanel(ControlPanel.AIDS) },
-            selected = state.panel == ControlPanel.AIDS,
-            description = "Viewfinder aids: grid, level, peaking, zebra, histogram",
-        )
+    if (tools) {
+        ModalBottomSheet(onDismissRequest = { tools = false }, containerColor = Siderea.palette.surface) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("Camera tools", style = androidx.compose.material3.MaterialTheme.typography.titleLarge)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    ChipButton(CameraSettingsOps.formatLabel(state.settings.format), actions.onCycleFormat)
+                    ChipButton(state.aspect.label, actions.onCycleAspect)
+                    ChipButton(
+                        "Night view",
+                        { actions.onAids { it.copy(nightView = !it.nightView) } },
+                        selected = state.aids.nightView,
+                    )
+                }
+                PillButton("Grid & focus aids", {
+                    tools = false
+                    actions.onTogglePanel(ControlPanel.AIDS)
+                }, modifier = Modifier.fillMaxWidth())
+                PillButton(
+                    "Sessions & exports",
+                    {
+                        tools = false
+                        actions.onOpenSessions()
+                    },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(24.dp))
+            }
+        }
     }
 }
 
@@ -441,6 +488,7 @@ private fun ModeStrip(
     Row(
         Modifier
             .fillMaxWidth()
+            .horizontalScroll(rememberScrollState())
             .padding(horizontal = SideriaSpacing.sm),
         horizontalArrangement = Arrangement.SpaceEvenly,
     ) {
@@ -448,10 +496,10 @@ private fun ModeStrip(
             val available = mode.availableSince == null
             Box(
                 Modifier
-                    .height(44.dp)
+                    .height(48.dp)
                     .clip(SideriaShapes.pill)
                     .clickable(role = Role.Tab) { onSelect(mode) }
-                    .padding(horizontal = SideriaSpacing.md)
+                    .padding(horizontal = 12.dp)
                     .semantics {
                         if (!available) contentDescription = "${mode.label}, arrives in ${mode.availableSince}"
                     },
@@ -504,36 +552,10 @@ private fun BottomRow(
             enabled = state.engine is EngineState.Ready && state.capture != CaptureUi.Saving,
         )
         Box(Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
-            LensColumn(state, actions)
-        }
-    }
-}
-
-@Composable
-private fun LensColumn(
-    state: CameraUiState,
-    actions: CameraActions,
-) {
-    val current = state.lens ?: return
-    val sameFacing = state.lenses.filter { it.facing == current.facing }
-    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(SideriaSpacing.xs)) {
-        Row(horizontalArrangement = Arrangement.spacedBy(SideriaSpacing.xs)) {
-            sameFacing.forEach { lens ->
-                ChipButton(
-                    text = lens.zoomLabel,
-                    onClick = { actions.onSelectLens(lens.key) },
-                    selected = lens.key == current.key,
-                    enabled = !state.isCapturing,
-                    description = "${lens.zoomLabel} lens",
-                )
+            if (!state.isCapturing && state.lenses.any { it.facing != state.lens?.facing }) {
+                IconTarget(Icons.Default.Cameraswitch, "Switch camera", actions.onFlip)
             }
         }
-        ChipButton(
-            text = if (current.isFront) "FRONT" else "BACK",
-            onClick = actions.onFlip,
-            enabled = !state.isCapturing && state.lenses.any { it.facing != current.facing },
-            description = "Switch between front and back camera",
-        )
     }
 }
 
@@ -549,12 +571,15 @@ private fun LastPhotoThumb(
             .size(56.dp)
             .clip(SideriaShapes.small)
             .background(Siderea.palette.surfaceRaised)
-            .clickable(enabled = uri != null, role = Role.Button, onClickLabel = "Open last photo") { onOpen() }
-            .semantics { contentDescription = if (uri == null) "No photo yet" else "Last photo. Open." },
+            .clickable(role = Role.Button, onClickLabel = "Open gallery") { onOpen() }
+            .semantics { contentDescription = "Gallery" },
         contentAlignment = Alignment.Center,
     ) {
         bitmap?.let {
             Image(it.asImageBitmap(), null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
+        }
+        if (bitmap == null) {
+            androidx.compose.material3.Icon(Icons.Default.PhotoLibrary, null, tint = Siderea.palette.onBackground)
         }
     }
 }
@@ -608,6 +633,7 @@ private const val MESSAGE_MS = 7_000L
 private fun PermissionGate(
     onAllow: () -> Unit,
     onSettings: () -> Unit,
+    onGallery: () -> Unit,
 ) {
     Column(
         Modifier
@@ -618,13 +644,13 @@ private fun PermissionGate(
     ) {
         Text("Siderea needs the camera", style = Siderea.text.readout, color = Siderea.palette.onBackground)
         Text(
-            "Photos are taken on this phone and saved to Pictures/Siderea. Nothing is uploaded, " +
-                "and the camera is only used while the app is open.",
+            "Take photos on your phone. Your photos stay on this device.",
             style = Siderea.text.readoutSmall,
             color = Siderea.palette.onSurfaceMuted,
             textAlign = TextAlign.Center,
         )
         PillButton("Allow camera", onAllow, style = PillStyle.Filled)
+        PillButton("Open gallery", onGallery, style = PillStyle.Outlined)
         PillButton("Open app settings", onSettings, style = PillStyle.Subtle)
     }
 }
@@ -643,22 +669,6 @@ private fun FatalMessage(
     ) {
         Text(message, style = Siderea.text.readoutSmall, color = Siderea.palette.danger, textAlign = TextAlign.Center)
         PillButton("Open settings", onSettings, style = PillStyle.Outlined)
-    }
-}
-
-private fun openPhoto(
-    context: Context,
-    uri: String,
-) {
-    val intent =
-        Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(Uri.parse(uri), "image/*")
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-        }
-    try {
-        context.startActivity(intent)
-    } catch (_: ActivityNotFoundException) {
-        // No gallery app can open it; the photo is still saved.
     }
 }
 
