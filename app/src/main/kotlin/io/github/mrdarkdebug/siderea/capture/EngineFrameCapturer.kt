@@ -16,9 +16,12 @@ import io.github.mrdarkdebug.siderea.core.camera.engine.StillRequest
 import io.github.mrdarkdebug.siderea.core.capture.session.FrameRecord
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionHandle
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionLayout
+import io.github.mrdarkdebug.siderea.core.capture.timelapse.ExposureRamp
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.FrameCapturer
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.FrameResult
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.MovementDetector
+import io.github.mrdarkdebug.siderea.core.capture.timelapse.RampExposure
+import io.github.mrdarkdebug.siderea.core.export.Deflicker
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.ByteArrayOutputStream
@@ -41,6 +44,8 @@ class EngineFrameCapturer(
     private val movement: MovementDetector?,
     private val reopen: suspend () -> Boolean,
     private val onPreview: (File) -> Unit,
+    /** When set, each frame's exposure comes from the ramp, which then learns from the frame it just took. */
+    private val ramp: ExposureRamp? = null,
 ) : FrameCapturer {
     override suspend fun capture(
         index: Int,
@@ -48,7 +53,7 @@ class EngineFrameCapturer(
         lockExposure: Boolean,
     ): FrameResult {
         val startedAt = SystemClock.elapsedRealtime()
-        val settings = frameSettings(lockExposure)
+        val settings = ramp?.let { rampSettings(it.current()) } ?: frameSettings(lockExposure)
         val plan =
             RequestPlanner.plan(
                 settings,
@@ -65,6 +70,9 @@ class EngineFrameCapturer(
             } catch (e: EngineException) {
                 return failure(e.userMessage)
             }
+        if (ramp != null) {
+            photo.jpeg?.let { bytes -> meanLuma(bytes)?.let { ramp.update(it) } }
+        }
         return try {
             val record = withContext(Dispatchers.IO) { write(index, plannedAtMs, startedAt, photo, flags) }
             FrameResult.Captured(record)
@@ -106,6 +114,25 @@ class EngineFrameCapturer(
             photo.dng?.delete()
             "Couldn't write the dark frame (${e.message}). Is the storage full?"
         }
+    }
+
+    private fun rampSettings(exposure: RampExposure): CaptureSettings =
+        request.settings.copy(exposureMode = ExposureMode.MANUAL, shutterNs = exposure.shutterNs, iso = exposure.iso)
+
+    /** Brightness 0..1 of a small decode of [jpeg], the measurement the exposure ramp steers by. */
+    private fun meanLuma(jpeg: ByteArray): Double? {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size, bounds)
+        if (bounds.outWidth <= 0) return null
+        var sample = 1
+        while (bounds.outWidth / (sample * 2) >= LUMA_WIDTH) sample *= 2
+        val bitmap =
+            BitmapFactory.decodeByteArray(jpeg, 0, jpeg.size, BitmapFactory.Options().apply { inSampleSize = sample })
+                ?: return null
+        val pixels = IntArray(bitmap.width * bitmap.height)
+        bitmap.getPixels(pixels, 0, bitmap.width, 0, 0, bitmap.width, bitmap.height)
+        bitmap.recycle()
+        return Deflicker.meanLuma(pixels)
     }
 
     /** Locked exposure replays the values metered at the start; unlocked lets each frame meter itself. */
@@ -196,6 +223,7 @@ class EngineFrameCapturer(
     private companion object {
         const val QUALITY = 95
         const val PREVIEW_WIDTH = 640
+        const val LUMA_WIDTH = 160
         const val PREVIEW_QUALITY = 80
     }
 }

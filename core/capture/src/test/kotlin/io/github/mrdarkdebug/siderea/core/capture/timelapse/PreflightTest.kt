@@ -44,6 +44,13 @@ class PreflightTest {
     }
 
     @Test
+    fun `a ramping exposure is fine even though it is not locked`() {
+        val ramp = item("exposure") { copy(exposureLocked = false, exposureRamp = true) }
+        assertEquals(PreflightStatus.OK, ramp.status)
+        assertTrue(ramp.detail.contains("Ramping"))
+    }
+
+    @Test
     fun `an interval that is too short blocks the start`() {
         val bad = IntervalCheck(false, 8_700, true, "This interval is too short. Minimum interval: 8.7 s (measured).")
         val items = Preflight.evaluate(inputs { copy(intervalCheck = bad) })

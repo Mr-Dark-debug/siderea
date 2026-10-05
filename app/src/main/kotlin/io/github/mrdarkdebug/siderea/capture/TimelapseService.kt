@@ -18,6 +18,7 @@ import androidx.core.app.ServiceCompat
 import dagger.hilt.android.AndroidEntryPoint
 import io.github.mrdarkdebug.siderea.core.camera.capability.CapabilityRepository
 import io.github.mrdarkdebug.siderea.core.camera.capability.CapabilityState
+import io.github.mrdarkdebug.siderea.core.camera.control.CaptureFormat
 import io.github.mrdarkdebug.siderea.core.camera.control.CaptureSettings
 import io.github.mrdarkdebug.siderea.core.camera.control.ExposureLimits
 import io.github.mrdarkdebug.siderea.core.camera.control.ExposureMode
@@ -38,9 +39,11 @@ import io.github.mrdarkdebug.siderea.core.capture.session.SessionKind
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionManifest
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionStatus
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionStore
+import io.github.mrdarkdebug.siderea.core.capture.timelapse.ExposureRamp
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.GuardInputs
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.MovementDetector
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.OverheadEstimate
+import io.github.mrdarkdebug.siderea.core.capture.timelapse.RampLimits
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.RunResult
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.RunnerListener
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.TimelapseRunner
@@ -204,6 +207,7 @@ class TimelapseService : Service() {
                     movement = movement,
                     reopen = { reopenCamera(lens, request) },
                     onPreview = ::onPreview,
+                    ramp = buildRamp(request, session, limits),
                 )
             val runner =
                 TimelapseRunner(
@@ -290,6 +294,40 @@ class TimelapseService : Service() {
         stopSelf()
     }
 
+    /**
+     * The exposure ramp for this run, or null when there is none to build: it needs a camera with manual exposure
+     * and frames it can measure (JPEG). When asked for and not possible, the session says so and meters per frame.
+     */
+    private fun buildRamp(
+        request: LaunchRequest,
+        session: SessionHandle,
+        limits: ExposureLimits,
+    ): ExposureRamp? {
+        if (!request.config.rampExposure) return null
+        if (!limits.manualExposure || request.settings.format == CaptureFormat.RAW) {
+            session.addEvent("Exposure ramp needs manual exposure and JPEG frames; metering each frame instead.")
+            return null
+        }
+        val cap = (request.config.intervalMs * NS_PER_MS * RAMP_SHUTTER_FRACTION).toLong()
+        val shutterMax = minOf(limits.shutterMaxNs, cap).coerceAtLeast(limits.shutterMinNs)
+        val isoMax = minOf(limits.isoMax, request.config.rampMaxIso).coerceAtLeast(limits.isoMin)
+        val rampLimits = RampLimits(limits.shutterMinNs, shutterMax, limits.isoMin, isoMax)
+        // After an interruption the ramp carries on from the last frame's exposure, not from the start.
+        val last =
+            if (request.resumeSessionId != null) {
+                session.frames.lastOrNull { it.error == null && it.exposureNs != null && it.iso != null }
+            } else {
+                null
+            }
+        val shutter =
+            (last?.exposureNs ?: request.lockedShutterNs).coerceIn(
+                rampLimits.shutterMinNs,
+                rampLimits.shutterMaxNs,
+            )
+        val iso = (last?.iso ?: request.lockedIso).coerceIn(rampLimits.isoMin, rampLimits.isoMax)
+        return ExposureRamp(rampLimits, shutter, iso)
+    }
+
     private fun findLens(request: LaunchRequest): Lens? {
         val report = (capabilities.state.value as? CapabilityState.Ready)?.report ?: return null
         return LensCatalog.from(report).firstOrNull { it.key == request.lensKey }
@@ -329,7 +367,7 @@ class TimelapseService : Service() {
     }
 
     private fun lockedSettings(request: LaunchRequest): CaptureSettings =
-        if (request.config.lockExposure) {
+        if (request.config.lockExposure || request.config.rampExposure) {
             request.settings.copy(
                 exposureMode = ExposureMode.MANUAL,
                 shutterNs = request.lockedShutterNs,
@@ -523,6 +561,8 @@ class TimelapseService : Service() {
         private const val REOPEN_DELAY_MS = 3_000L
         private const val MAX_NOTICES = 5
         private const val MOVED_DEGREES = 1.0f
+        private const val NS_PER_MS = 1_000_000L
+        private const val RAMP_SHUTTER_FRACTION = 0.6
         private const val MAX_WAKE_LOCK_MS = 24 * 60 * 60 * 1000L
         private const val IMAGE_BUFFERS = 3
         private val json = Json { ignoreUnknownKeys = true }

@@ -121,9 +121,10 @@ class TimelapseCoordinator
                 stop = setup.stop,
                 frameCount = setup.frameCount.takeIf { setup.stop == StopCondition.FRAME_COUNT },
                 durationMs = setup.durationMs.takeIf { setup.stop == StopCondition.DURATION },
-                lockExposure = setup.lockExposure,
+                lockExposure = setup.lockExposure && !setup.rampExposure,
                 outputFps = setup.fps,
                 adaptToHeat = setup.adaptToHeat,
+                rampExposure = setup.rampExposure,
             )
 
         /** The checklist, judged against what the phone is really doing right now. */
@@ -160,6 +161,7 @@ class TimelapseCoordinator
                         }.getOrNull(),
                     manualFocus = settings.focusMode == FocusMode.MANUAL,
                     exposureLocked = setup.lockExposure,
+                    exposureRamp = setup.rampExposure,
                     steady = steadiness.isSteady(),
                     intervalCheck = IntervalMath.check(setup.intervalMs, shutterNs, overhead),
                     notificationsAllowed = NotificationManagerCompat.from(context).areNotificationsEnabled(),
@@ -257,7 +259,8 @@ class TimelapseCoordinator
             lensKey = lensKey,
             settings =
                 settings.copy(
-                    exposureMode = if (setup.lockExposure) ExposureMode.MANUAL else settings.exposureMode,
+                    exposureMode =
+                        if (setup.lockExposure || setup.rampExposure) ExposureMode.MANUAL else settings.exposureMode,
                 ),
             aspect = aspect,
             config = config(setup),

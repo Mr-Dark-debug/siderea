@@ -64,6 +64,8 @@ data class TimelapseSetup(
     val customInterval: Boolean = false,
     /** Astro: pause between one frame ending and the next starting. The interval is exposure plus this. */
     val astroGapMs: Long = 2_000,
+    /** Follow changing light with a smooth exposure ramp (needs JPEG frames to measure). */
+    val rampExposure: Boolean = false,
     /** Virtual bulb: total exposure in seconds, or null to keep going until stopped. */
     val bulbSeconds: Int? = 120,
 )

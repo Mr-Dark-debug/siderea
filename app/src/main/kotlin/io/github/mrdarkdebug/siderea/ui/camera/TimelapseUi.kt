@@ -43,9 +43,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.mrdarkdebug.siderea.capture.RunState
 import io.github.mrdarkdebug.siderea.core.camera.capability.CameraFormat
+import io.github.mrdarkdebug.siderea.core.camera.control.CaptureFormat
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionStatus
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionSummary
 import io.github.mrdarkdebug.siderea.core.capture.session.StopCondition
+import io.github.mrdarkdebug.siderea.core.capture.session.TimelapseConfig
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.IntervalMath
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.Preflight
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.PreflightFix
@@ -228,8 +230,23 @@ fun TimelapsePanel(
         LazyRow(horizontalArrangement = Arrangement.spacedBy(SideriaSpacing.xs)) {
             item {
                 ChipButton("LOCK EXPOSURE", {
-                    actions.onTimelapse { it.copy(lockExposure = !it.lockExposure) }
-                }, selected = setup.lockExposure)
+                    actions.onTimelapse { it.copy(lockExposure = !it.lockExposure, rampExposure = false) }
+                }, selected = setup.lockExposure && !setup.rampExposure)
+            }
+            item {
+                ChipButton(
+                    "RAMP EXPOSURE",
+                    {
+                        actions.onTimelapse {
+                            it.copy(
+                                rampExposure = !it.rampExposure,
+                                lockExposure = it.rampExposure,
+                            )
+                        }
+                    },
+                    selected = setup.rampExposure,
+                    description = "Follow changing light with a smooth exposure ramp, for sunsets and sunrises",
+                )
             }
             item {
                 ChipButton("SLOW WHEN HOT", {
@@ -241,6 +258,18 @@ fun TimelapsePanel(
                     actions.onTimelapse { it.copy(keepScreenOn = !it.keepScreenOn) }
                 }, selected = setup.keepScreenOn)
             }
+        }
+        if (setup.rampExposure) {
+            Text(
+                if (state.settings.format == CaptureFormat.RAW) {
+                    "The ramp measures each JPEG, so it can't steer RAW-only frames. Pick JPEG or RAW + JPEG."
+                } else {
+                    "Shutter first, then ISO up to ${TimelapseConfig.DEFAULT_RAMP_MAX_ISO}, a quarter of a stop at a " +
+                        "time. Needs a lens with manual exposure; deflicker the video afterwards to finish the job."
+                },
+                style = Siderea.text.caption,
+                color = Siderea.palette.onSurfaceMuted,
+            )
         }
         Text("VIDEO FRAME RATE", style = Siderea.text.caption, color = Siderea.palette.onSurfaceMuted)
         Row(horizontalArrangement = Arrangement.spacedBy(SideriaSpacing.xs)) {

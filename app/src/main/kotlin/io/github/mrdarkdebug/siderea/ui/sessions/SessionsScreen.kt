@@ -371,6 +371,13 @@ private fun PreviewStrip(
 
 private const val PREVIEW_ASPECT = 0.75f
 
+private fun exposureNote(config: io.github.mrdarkdebug.siderea.core.capture.session.TimelapseConfig): String =
+    when {
+        config.rampExposure -> ", exposure ramped"
+        config.lockExposure -> ", exposure locked"
+        else -> ", exposure per frame"
+    }
+
 @Composable
 private fun Facts(d: SessionDetail) {
     val m = d.manifest
@@ -387,7 +394,7 @@ private fun Facts(d: SessionDetail) {
                 "Interval",
                 "${IntervalMath.formatSeconds(
                     it.intervalMs,
-                )}${if (it.lockExposure) ", exposure locked" else ", exposure per frame"}",
+                )}${exposureNote(it)}",
             )
         }
         KeyValueRow(

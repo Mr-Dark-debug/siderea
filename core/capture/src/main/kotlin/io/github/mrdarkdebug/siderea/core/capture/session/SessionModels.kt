@@ -44,6 +44,10 @@ data class TimelapseConfig(
     val outputFps: Int = DEFAULT_FPS,
     /** Slow the interval or pause when the phone overheats, instead of ending the session. */
     val adaptToHeat: Boolean = true,
+    /** Follow changing light with a smooth exposure ramp instead of locking or metering each frame. */
+    val rampExposure: Boolean = false,
+    /** The highest ISO the ramp may use. */
+    val rampMaxIso: Int = DEFAULT_RAMP_MAX_ISO,
 ) {
     /** Frames the session is expected to produce, or null when it runs until stopped. */
     val plannedFrames: Int?
@@ -56,6 +60,7 @@ data class TimelapseConfig(
 
     companion object {
         const val DEFAULT_FPS = 30
+        const val DEFAULT_RAMP_MAX_ISO = 1_600
     }
 }
 

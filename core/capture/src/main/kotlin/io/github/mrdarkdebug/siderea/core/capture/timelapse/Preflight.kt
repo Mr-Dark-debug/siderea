@@ -28,6 +28,7 @@ data class PreflightInputs(
     val airplaneMode: Boolean?,
     val manualFocus: Boolean,
     val exposureLocked: Boolean,
+    val exposureRamp: Boolean = false,
     val steady: Boolean?,
     val intervalCheck: IntervalCheck,
     val notificationsAllowed: Boolean,
@@ -150,7 +151,14 @@ object Preflight {
         }
 
     private fun exposure(i: PreflightInputs) =
-        if (i.exposureLocked) {
+        if (i.exposureRamp) {
+            PreflightItem(
+                "exposure",
+                "Exposure",
+                PreflightStatus.OK,
+                "Ramping: shutter first, then ISO, in small steps that follow the light.",
+            )
+        } else if (i.exposureLocked) {
             PreflightItem("exposure", "Exposure", PreflightStatus.OK, "Locked for every frame.")
         } else {
             PreflightItem(
