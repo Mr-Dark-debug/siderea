@@ -63,6 +63,11 @@ make red builds meaningless. Run them before every release.
 * `VideoExportInstrumentedTest`: real MP4s from the phone's own encoder, read back with `MediaExtractor`: one
   sample per frame, size, even timeline, crop, HEVC (skipped when there is no encoder), deflicker, unreadable
   frames, cancel, TIFF, MediaStore publishing.
+* `AstroFlowTest`: through the real UI: the Astro panel, a short Astro session, star trails from it (JPEG and
+  TIFF written), and ten dark frames captured and filed with the session.
+* `ProcessingBenchmarkTest`: times decode, star detection, alignment, warped and direct stacking, trails and the
+  16-bit TIFF on large frames and logs them (`adb logcat -s SideriaBench`). Run it on a real phone and send the
+  line.
 * `CameraCapabilityReaderInstrumentedTest`: the real reader against whatever cameras the target has;
   consistency checks (unique ids, physical cameras point back to a logical parent, ranges agree with
   capabilities, one `1x` lens per facing, API 36 keys only on API 36, verdicts never over-claim, JSON

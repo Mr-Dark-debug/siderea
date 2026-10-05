@@ -191,6 +191,22 @@ private fun DoneCard(
                 modifier = Modifier.weight(1f),
             )
         }
+        if (done.extra != null) {
+            Spacer(Modifier.height(SideriaSpacing.sm))
+            PillButton(
+                "Save the TIFF too",
+                {
+                    message =
+                        runCatching { viewModel.saveExtraToGallery(done) }
+                            .fold(
+                                { "TIFF saved to ${done.kind.folder()}/Siderea." },
+                                { "Couldn't save it: ${it.message}" },
+                            )
+                },
+                style = PillStyle.Subtle,
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
         Spacer(Modifier.height(SideriaSpacing.sm))
         PillButton("Done", viewModel::dismissExport, style = PillStyle.Outlined, modifier = Modifier.fillMaxWidth())
     }

@@ -74,6 +74,40 @@ class EngineFrameCapturer(
         }
     }
 
+    /**
+     * Takes one dark frame (lens covered, same exposure and ISO as the lights) into the session's `darks/` folder.
+     * Returns null on success or a message for the person when it failed.
+     */
+    suspend fun captureDark(index: Int): String? {
+        val settings = frameSettings(lock = true)
+        val plan =
+            RequestPlanner.plan(settings, settings.shutterNs, settings.iso, limits, capabilities(), forPreview = false)
+        val photo =
+            try {
+                engine.capture(StillRequest(plan, format, request.jpegOrientation, QUALITY))
+            } catch (e: EngineException) {
+                return e.userMessage
+            }
+        return try {
+            withContext(Dispatchers.IO) {
+                val name = SessionLayout.darkName(index)
+                session.darkFile(name).parentFile?.mkdirs()
+                photo.jpeg?.let { session.darkJpegFile(name).writeBytes(it) }
+                photo.dng?.let {
+                    Files.move(
+                        it.toPath(),
+                        session.darkFile(name).toPath(),
+                        StandardCopyOption.REPLACE_EXISTING,
+                    )
+                }
+            }
+            null
+        } catch (e: IOException) {
+            photo.dng?.delete()
+            "Couldn't write the dark frame (${e.message}). Is the storage full?"
+        }
+    }
+
     /** Locked exposure replays the values metered at the start; unlocked lets each frame meter itself. */
     private fun frameSettings(lock: Boolean): CaptureSettings =
         if (lock) {

@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import io.github.mrdarkdebug.siderea.capture.CaptureSessionState
 import io.github.mrdarkdebug.siderea.capture.RunState
+import io.github.mrdarkdebug.siderea.capture.TimelapseCoordinator
 import io.github.mrdarkdebug.siderea.core.capture.session.FrameRecord
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionManifest
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionStore
@@ -15,6 +16,7 @@ import io.github.mrdarkdebug.siderea.core.export.PixelSize
 import io.github.mrdarkdebug.siderea.core.export.VideoCodec
 import io.github.mrdarkdebug.siderea.core.export.VideoEncoders
 import io.github.mrdarkdebug.siderea.core.export.VideoSpec
+import io.github.mrdarkdebug.siderea.export.AstroMode
 import io.github.mrdarkdebug.siderea.export.ExportCoordinator
 import io.github.mrdarkdebug.siderea.export.ExportState
 import kotlinx.coroutines.Dispatchers
@@ -42,6 +44,10 @@ data class SessionDetail(
     val movedFrames: Int,
     val firstJpeg: File?,
     val hasRaw: Boolean,
+    /** Dark frames already on disk for this session. */
+    val darkFrames: Int,
+    /** The JPEG orientation the lights were saved with; dark frames must match it so sizes agree. */
+    val orientation: Int,
 )
 
 /** What a video export would produce, shown before the person commits to it. */
@@ -62,6 +68,7 @@ class SessionsViewModel
         private val store: SessionStore,
         private val run: CaptureSessionState,
         private val exports: ExportCoordinator,
+        private val timelapse: TimelapseCoordinator,
     ) : ViewModel() {
         val exportState: StateFlow<ExportState> = exports.state
 
@@ -117,6 +124,29 @@ class SessionsViewModel
             id: String,
             frameName: String,
         ) = exports.startTiff(id, frameName)
+
+        fun exportAstro(
+            id: String,
+            mode: AstroMode,
+            useDarks: Boolean,
+            brighten: Boolean,
+        ) = exports.startAstro(id, mode, useDarks, brighten)
+
+        /** Starts the camera service taking [count] dark frames for [id]. Returns false if a session is running. */
+        fun captureDarks(
+            id: String,
+            count: Int,
+            orientation: Int,
+        ): Boolean {
+            if (run.state.value is RunState.Running) return false
+            val request = timelapse.darkRequest(id, count, orientation) ?: return false
+            timelapse.start(request)
+            return true
+        }
+
+        val sessionRunning: Boolean get() = run.state.value is RunState.Running
+
+        fun saveExtraToGallery(done: ExportState.Done) = exports.saveExtraToGallery(done)
 
         fun cancelExport() = exports.cancel()
 
@@ -179,6 +209,8 @@ class SessionsViewModel
                 movedFrames = jpegs.count { MOVED in it.flags },
                 firstJpeg = jpegs.minByOrNull { it.index }?.let { handle.jpegFile(it.name) }?.takeIf { it.exists() },
                 hasRaw = frames.any { it.hasDng },
+                darkFrames = maxOf(handle.manifest.darkFrames, handle.darkJpegs().size),
+                orientation = frames.firstOrNull()?.orientationDegrees ?: 0,
                 summary = handle.summary(),
                 usableFrames = frames.count { it.error == null },
                 failedFrames = frames.count { it.error != null },

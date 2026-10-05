@@ -30,7 +30,7 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 | ✅ | **M1** Photo mode: full manual controls, RAW/JPEG, histogram, peaking | v0.2.0 | done, emulator-verified |
 | ✅ | **M2** Timelapse: foreground service, sessions, `session.json`, resume | v0.3.0 | done, emulator-verified |
 | ✅ | **M3** Export: H.264/HEVC, fps, resolution, crop, deflicker, TIFF, ZIP | v0.4.0 | done, emulator-verified |
-| ⬜ | **M4** Astro: star trails, dark frames, aligned stacking | v0.5.0 | not started |
+| ✅ | **M4** Astro: star trails, dark frames, aligned stacking | v0.5.0 | done, emulator-verified |
 | ⬜ | **M5** Virtual Bulb long exposure | v0.6.0 | not started |
 | ⬜ | **M6** Exposure ramp, polish, accessibility | v1.0.0 | not started |
 
@@ -56,7 +56,7 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 <sub>Captured on Android emulators, whose virtual cameras are simpler than a real phone's (the scene in the first
 shot is the emulator's test room). Real-device screenshots will replace these.</sub>
 
-## What it does today (v0.4.0)
+## What it does today (v0.5.0)
 
 - **Manual photo mode** on Camera2: shutter, ISO, focus, white balance (presets or Kelvin + tint) and exposure
   compensation, each with Auto / Manual. Shutter and ISO combine into P / S / I / M behaviour.
@@ -71,6 +71,11 @@ shot is the emulator's test room). Real-device screenshots will replace these.</
 - **Timelapse** with a foreground service: interval presets or a ruler, stop by frames / duration / until
   stopped, a calculator (minimum interval from *measured* capture overhead, frames, video length, storage,
   battery), a pre-flight checklist, locked exposure, heat / battery / storage guards, and a screen-dim mode.
+- **Astro mode**: back-to-back long exposures (interval = exposure + a short gap, never faster than the phone can
+  save a frame), with a "500 rule" hint for the lens. Afterwards from the session screen: **star trails**,
+  **comet trails** and an **aligned stack** (stars are detected, matched against a reference frame, and the frames
+  are warped onto it and averaged; frames that cannot be matched are left out and listed), plus **dark frames**
+  taken with the lens covered and subtracted. Results are a JPEG and a TIFF (16-bit for stacks).
 - **Export** from a session: **video** (H.264 or HEVC, AV1 only where there is a hardware encoder; 12-60 fps;
   4K / 1080p / 720p / source; 16:9, 4:3, 1:1, 9:16 crops; three deflicker strengths; three quality levels, with a
   live size estimate), a **ZIP** of the frames and `session.json`, and any single frame as an uncompressed
@@ -81,7 +86,7 @@ shot is the emulator's test room). Real-device screenshots will replace these.</
 - **Capability Inspector** for every camera, with a plain-language verdict per lens, exportable as JSON.
 - **Night-first design**: true black, one amber accent, a pure-red night-vision mode, 56 dp touch targets.
 
-Not built yet: astro stacking, star trails, Virtual Bulb, export, the exposure ramp. They appear on the
+Not built yet: Virtual Bulb, export, the exposure ramp. They appear on the
 mode strip and say when they arrive.
 
 ## Why

@@ -26,6 +26,11 @@ data class LaunchRequest(
     val keepScreenOn: Boolean,
     val resumeSessionId: String? = null,
     val name: String? = null,
+    /** Astro sessions use the same schedule as a timelapse but are filed and processed differently. */
+    val kind: SessionKind = SessionKind.TIMELAPSE,
+    /** When set, no lights are taken: [darkCount] dark frames go into this existing session. */
+    val darkFramesFor: String? = null,
+    val darkCount: Int = 0,
 )
 
 /** What a running or just-finished session looks like to the UI. */

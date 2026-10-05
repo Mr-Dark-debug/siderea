@@ -140,6 +140,15 @@ class SessionHandle internal constructor(
 
     fun darkFile(name: String) = File(dir, "${SessionLayout.DARKS_DIR}/$name.dng")
 
+    fun darkJpegFile(name: String) = File(dir, "${SessionLayout.DARKS_DIR}/$name.jpg")
+
+    /** The JPEG dark frames on disk, in order. */
+    fun darkJpegs(): List<File> =
+        File(dir, SessionLayout.DARKS_DIR)
+            .listFiles { f -> f.extension == "jpg" }
+            .orEmpty()
+            .sortedBy { it.name }
+
     fun exportsDir() = File(dir, SessionLayout.EXPORTS_DIR)
 
     /**

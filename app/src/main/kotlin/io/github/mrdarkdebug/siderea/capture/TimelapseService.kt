@@ -54,7 +54,9 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -127,11 +129,11 @@ class TimelapseService : Service() {
         val placeholder =
             RunState.Running(
                 sessionId = request.resumeSessionId.orEmpty(),
-                name = request.name ?: SessionKind.TIMELAPSE.title,
-                kind = SessionKind.TIMELAPSE,
+                name = request.name ?: request.kind.title,
+                kind = request.kind,
                 format = request.settings.format,
                 frames = 0,
-                plannedFrames = request.config.plannedFrames,
+                plannedFrames = if (request.darkFramesFor != null) request.darkCount else request.config.plannedFrames,
                 startedAtElapsedMs = SystemClock.elapsedRealtime(),
                 intervalMs = request.config.intervalMs,
                 lastPreviewPath = null,
@@ -173,6 +175,10 @@ class TimelapseService : Service() {
             val capabilities = ready.capabilities
             primePreview(request, limits, capabilities)
             session = openSession(request, lens)
+            if (request.darkFramesFor != null) {
+                captureDarks(request, session, limits, capabilities)
+                return
+            }
             val movement = MovementDetector(MOVED_DEGREES)
             val motionJob =
                 scope.launch {
@@ -220,7 +226,68 @@ class TimelapseService : Service() {
         } catch (e: IllegalStateException) {
             failure = e.message ?: "The session couldn't start."
         }
-        withContext(NonCancellable) { finish(session, result, failure) }
+        withContext(NonCancellable) { finish(session, result, failure, request) }
+    }
+
+    /**
+     * Takes [LaunchRequest.darkCount] frames with the lens covered, at exactly the exposure and ISO the session's
+     * lights used, into its `darks/` folder. No schedule: dark frames go back to back.
+     */
+    private suspend fun captureDarks(
+        request: LaunchRequest,
+        session: SessionHandle,
+        limits: ExposureLimits,
+        capabilities: io.github.mrdarkdebug.siderea.core.camera.engine.EngineCapabilities,
+    ) {
+        var taken = 0
+        var failure: String? = null
+        try {
+            val capturer =
+                EngineFrameCapturer(
+                    engine = engine,
+                    session = session,
+                    request = request,
+                    limits = limits,
+                    capabilities = { (engine.state.value as? EngineState.Ready)?.info?.capabilities ?: capabilities },
+                    format = request.settings.format,
+                    movement = null,
+                    reopen = { false },
+                    onPreview = {},
+                )
+            delay(WARM_UP_MS)
+            val first = session.manifest.darkFrames
+            for (i in 0 until request.darkCount) {
+                currentCoroutineContext().ensureActive()
+                failure = capturer.captureDark(first + i)
+                if (failure != null) break
+                taken++
+                sessionState.update { it.copy(frames = taken) }
+                (sessionState.state.value as? RunState.Running)?.let(notifications::update)
+            }
+        } catch (_: CancellationException) {
+            failure = null
+        }
+        withContext(NonCancellable) {
+            session.updateManifest { it.copy(darkFrames = it.darkFrames + taken) }
+            session.addEvent(failure?.let { "Dark frames stopped after $taken: $it" } ?: "Captured $taken dark frames.")
+            finishDarks(session, taken, failure)
+        }
+    }
+
+    private suspend fun finishDarks(
+        session: SessionHandle,
+        taken: Int,
+        failure: String?,
+    ) {
+        runCatching { engine.close() }
+        headless.release()
+        motion.stop()
+        releaseWakeLock()
+        val message = failure ?: "$taken dark frames saved with the session."
+        sessionState.set(RunState.Finished(session.id, session.manifest.status, taken, message))
+        ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)
+        notifications.finished(session.manifest.name + " darks", SessionStatus.COMPLETED, taken, message)
+        stopSelf()
     }
 
     private fun findLens(request: LaunchRequest): Lens? {
@@ -276,19 +343,29 @@ class TimelapseService : Service() {
         request: LaunchRequest,
         lens: Lens,
     ): SessionHandle {
-        request.resumeSessionId?.let { id ->
+        if (request.darkFramesFor != null && store.open(request.darkFramesFor) == null) {
+            error("The session these dark frames belong to is gone.")
+        }
+        (request.darkFramesFor ?: request.resumeSessionId)?.let { id ->
             store.open(id)?.let { existing ->
-                existing.updateManifest { it.copy(status = SessionStatus.RUNNING, finishedAtEpochMs = null) }
-                existing.addEvent("Resumed after an interruption.")
+                if (request.darkFramesFor == null) {
+                    existing.updateManifest { it.copy(status = SessionStatus.RUNNING, finishedAtEpochMs = null) }
+                    existing.addEvent("Resumed after an interruption.")
+                }
                 return existing
             }
         }
         val info = packageManager.getPackageInfo(packageName, 0)
-        return store.create(SessionKind.TIMELAPSE) { id, created ->
+        return store.create(request.kind) { id, created ->
             SessionManifest(
                 id = id,
-                name = request.name ?: "Timelapse " + id.substringBefore("_Timelapse").replace('_', ' '),
-                kind = SessionKind.TIMELAPSE,
+                name =
+                    request.name
+                        ?: (
+                            request.kind.title + " " +
+                                id.substringBefore("_" + request.kind.folderLabel).replace('_', ' ')
+                        ),
+                kind = request.kind,
                 status = SessionStatus.RUNNING,
                 createdAtEpochMs = created,
                 app = AppSnapshot("Siderea", info.versionName ?: "unknown", info.longVersionCode),
@@ -351,6 +428,7 @@ class TimelapseService : Service() {
         session: SessionHandle?,
         result: RunResult?,
         failure: String?,
+        request: LaunchRequest,
     ) {
         val status =
             when {
@@ -366,7 +444,7 @@ class TimelapseService : Service() {
                 else -> failure
             }
         val frames = session?.frames?.count { it.error == null } ?: 0
-        val name = session?.manifest?.name ?: SessionKind.TIMELAPSE.title
+        val name = session?.manifest?.name ?: request.kind.title
         val running = sessionState.state.value as? RunState.Running
         session?.let { handle ->
             message?.let(handle::addEvent)

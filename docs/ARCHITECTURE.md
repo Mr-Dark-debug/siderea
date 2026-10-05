@@ -143,6 +143,17 @@ hold a frame back. The UI observes `CaptureSessionState`; it never owns the run.
    `ExportService` (foreground, data sync) only keeps the process alive and shows progress. Finished files are
    published through MediaStore on request.
 
+### Astro processing (M4)
+`:core:processing` is plain Kotlin on plain arrays (`RgbImage`), with Android only at the edges
+(`FileFrameSource` decodes JPEGs, `RgbImageIo` writes JPEG and TIFF). Everything is expressed through
+`FrameAccumulator { add(frame, transform?); toRgbImage() }`, so a stack never holds more than one frame and the
+accumulator. `StarDetector` -> `Alignment.estimate` (pair-hypothesis search + least squares) ->
+`StackAccumulator` (bilinear warp, float mean, 16-bit TIFF). `TrailAccumulator` is a lighten blend with an optional
+per-frame fade. `MasterDark` averages the dark frames and subtracts them in place. The decision recorded in the
+M0 notes was to benchmark Kotlin against C++/NDK and a GPU path before choosing: only the Kotlin reference exists
+and is timed (`ProcessingBenchmarkTest`); no alternative was built, so the choice is "Kotlin, because it is correct
+and simple and the interface allows replacement", not "Kotlin, because it won".
+
 ### Settings
 Jetpack DataStore (Preferences) behind `SettingsRepository`. Host unit tests use an in-memory `DataStore`
 because DataStore's file replacement uses `File.renameTo`, which fails on Windows hosts when the target

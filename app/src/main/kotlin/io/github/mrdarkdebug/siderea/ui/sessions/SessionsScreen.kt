@@ -183,6 +183,7 @@ private fun SessionRow(
 fun SessionDetailScreen(
     id: String,
     onBack: () -> Unit,
+    onOpenCamera: () -> Unit = {},
     viewModel: SessionsViewModel = hiltViewModel(),
 ) {
     val detail by viewModel.detail.collectAsStateWithLifecycle()
@@ -192,6 +193,8 @@ fun SessionDetailScreen(
     var confirmDelete by remember { mutableStateOf(false) }
     var videoDialog by remember { mutableStateOf(false) }
     var tiffFrame by remember { mutableStateOf<String?>(null) }
+    var astroDialog by remember { mutableStateOf(false) }
+    var darkDialog by remember { mutableStateOf(false) }
     val nav = WindowInsets.navigationBars.asPaddingValues()
     val d = detail?.takeIf { it.manifest.id == id }
     Box(Modifier.fillMaxSize()) {
@@ -239,6 +242,11 @@ fun SessionDetailScreen(
                         Spacer(Modifier.height(SideriaSpacing.sm))
                         ExportSection(d, exportState, viewModel) { videoDialog = true }
                     }
+                    if (d.jpegFrames >= 2) {
+                        item {
+                            AstroSection(d, exportState, { astroDialog = true }, { darkDialog = true })
+                        }
+                    }
                     item {
                         Spacer(Modifier.height(SideriaSpacing.md))
                         Text(
@@ -265,6 +273,18 @@ fun SessionDetailScreen(
                         }
                     }
                 }
+            }
+        }
+        if (astroDialog && d != null) {
+            AstroDialog(d, { astroDialog = false }) { mode, darks, brighten ->
+                astroDialog = false
+                viewModel.exportAstro(id, mode, darks, brighten)
+            }
+        }
+        if (darkDialog && d != null) {
+            DarkFramesDialog(d, viewModel.sessionRunning, { darkDialog = false }) { count ->
+                darkDialog = false
+                if (viewModel.captureDarks(id, count, d.orientation)) onOpenCamera()
             }
         }
         if (videoDialog && d != null) {

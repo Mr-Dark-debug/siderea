@@ -31,6 +31,7 @@ import io.github.mrdarkdebug.siderea.core.camera.engine.LensCatalog
 import io.github.mrdarkdebug.siderea.core.camera.engine.OpenParams
 import io.github.mrdarkdebug.siderea.core.camera.engine.RequestPlanner
 import io.github.mrdarkdebug.siderea.core.camera.engine.StillRequest
+import io.github.mrdarkdebug.siderea.core.capture.session.SessionKind
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.OverheadEstimate
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.Preflight
 import io.github.mrdarkdebug.siderea.core.data.settings.CameraStateRepository
@@ -398,10 +399,14 @@ class CameraViewModel
                 )
                 return
             }
-            mutableState.update {
-                it.copy(mode = mode, panel = if (mode == CameraMode.TIMELAPSE) ControlPanel.TIMELAPSE else null)
-            }
-            if (mode == CameraMode.TIMELAPSE) refreshOverhead()
+            val panel =
+                when (mode) {
+                    CameraMode.TIMELAPSE -> ControlPanel.TIMELAPSE
+                    CameraMode.ASTRO -> ControlPanel.ASTRO
+                    else -> null
+                }
+            mutableState.update { it.copy(mode = mode, panel = panel) }
+            if (panel != null) refreshOverhead()
         }
 
         fun dismissMessage() {
@@ -548,7 +553,7 @@ class CameraViewModel
         fun onShutterPressed() {
             when (mutableState.value.capture) {
                 CaptureUi.Idle -> {
-                    if (mutableState.value.mode == CameraMode.TIMELAPSE) openPreflight() else startCapture()
+                    if (mutableState.value.mode.runsSessions) openPreflight() else startCapture()
                 }
 
                 is CaptureUi.Countdown -> {
@@ -698,7 +703,7 @@ class CameraViewModel
                     val size = r.rawSize ?: r.jpegSize
                     size?.let { it.width.toLong() * it.height / MEGA }?.toFloat()
                 } ?: DEFAULT_MEGAPIXELS
-            val items = timelapse.preflight(s.timelapse, s.settings, s.effectiveShutterNs, s.overhead, megapixels)
+            val items = timelapse.preflight(setupFor(s), s.settings, s.effectiveShutterNs, s.overhead, megapixels)
             mutableState.update { it.copy(preflight = items) }
         }
 
@@ -722,14 +727,31 @@ class CameraViewModel
                     lensKey = lens.key,
                     settings = s.settings,
                     aspect = s.aspect.name,
-                    setup = s.timelapse,
+                    setup = setupFor(s),
                     shutterNs = s.effectiveShutterNs,
                     iso = s.effectiveIso,
                     orientation = orientation,
+                    kind = if (s.mode == CameraMode.ASTRO) SessionKind.ASTRO else SessionKind.TIMELAPSE,
                 )
             mutableState.update { it.copy(preflight = null, panel = null) }
             timelapse.start(request)
         }
+
+        /**
+         * What a run will really use. Astro frames are long exposures taken back to back, so the interval is the
+         * exposure plus a short gap, and the exposure is always locked.
+         */
+        private fun setupFor(s: CameraUiState): TimelapseSetup =
+            if (s.mode == CameraMode.ASTRO) {
+                s.timelapse.copy(
+                    intervalMs =
+                        astroIntervalMs(s.effectiveShutterNs, s.timelapse.astroGapMs, s.overhead),
+                    lockExposure = true,
+                    customInterval = true,
+                )
+            } else {
+                s.timelapse
+            }
 
         fun stopTimelapse() = timelapse.stop()
 
@@ -803,6 +825,7 @@ class CameraViewModel
 
         private companion object {
             const val PORTRAIT_SENSOR_ORIENTATION = 90
+            const val NS_PER_MS = 1_000_000L
             const val STATUS_INTERVAL_MS = 20_000L
             const val AE_INTERVAL_MS = 350L
             const val ONE_SECOND_MS = 1_000L

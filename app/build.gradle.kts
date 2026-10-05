@@ -72,6 +72,7 @@ dependencies {
     implementation(project(":core:data"))
     implementation(project(":core:capture"))
     implementation(project(":core:export"))
+    implementation(project(":core:processing"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

@@ -150,6 +150,8 @@ data class SessionManifest(
     val camera: CameraSnapshot,
     val requested: RequestedCapture,
     val timelapse: TimelapseConfig? = null,
+    /** Dark frames captured for this session (files in `darks/`). */
+    val darkFrames: Int = 0,
     val events: List<SessionEvent> = emptyList(),
     val frames: List<FrameRecord> = emptyList(),
 ) {

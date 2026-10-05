@@ -63,7 +63,11 @@ fun SideriaNavHost(keys: ShutterKeyBus) {
             )
         }
         composable<SessionRoute> { entry ->
-            SessionDetailScreen(id = entry.toRoute<SessionRoute>().id, onBack = { navController.popBackStack() })
+            SessionDetailScreen(
+                id = entry.toRoute<SessionRoute>().id,
+                onBack = { navController.popBackStack() },
+                onOpenCamera = { navController.popBackStack(CameraRoute, inclusive = false) },
+            )
         }
         composable<InspectorRoute> {
             InspectorScreen(onBack = { navController.popBackStack() })

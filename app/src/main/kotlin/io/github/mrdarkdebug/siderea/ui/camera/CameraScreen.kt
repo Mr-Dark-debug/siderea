@@ -484,7 +484,12 @@ private fun BottomRow(
         }
         ShutterButton(
             onClick = actions.onShutter,
-            description = if (state.mode == CameraMode.TIMELAPSE) "Start timelapse" else "Take photo",
+            description =
+                when (state.mode) {
+                    CameraMode.TIMELAPSE -> "Start timelapse"
+                    CameraMode.ASTRO -> "Start astro session"
+                    else -> "Take photo"
+                },
             busyDescription = if (state.capture is CaptureUi.Countdown) "Cancel timer" else "Stop exposure",
             progress = if (capturing) (progress ?: 0f) else null,
             enabled = state.engine is EngineState.Ready && state.capture != CaptureUi.Saving,

@@ -15,6 +15,7 @@ import io.github.mrdarkdebug.siderea.core.camera.engine.CameraEngine
 import io.github.mrdarkdebug.siderea.core.camera.engine.EngineException
 import io.github.mrdarkdebug.siderea.core.camera.engine.RequestPlan
 import io.github.mrdarkdebug.siderea.core.camera.engine.StillRequest
+import io.github.mrdarkdebug.siderea.core.capture.session.SessionKind
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionStatus
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionStore
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionSummary
@@ -201,6 +202,36 @@ class TimelapseCoordinator
                 keepScreenOn = true,
                 resumeSessionId = sessionId,
                 name = manifest.name,
+                kind = manifest.kind,
+            )
+        }
+
+        /**
+         * The request for [count] dark frames at the exposure and ISO a finished session used. The lens has to be
+         * covered by the person; Siderea only repeats the settings.
+         */
+        fun darkRequest(
+            sessionId: String,
+            count: Int,
+            jpegOrientation: Int,
+        ): LaunchRequest? {
+            val manifest = store.open(sessionId)?.manifest ?: return null
+            val settings = manifest.requested.settings
+            return LaunchRequest(
+                lensKey = manifest.camera.lensKey,
+                settings = settings,
+                aspect = manifest.requested.aspect,
+                config =
+                    manifest.timelapse
+                        ?: TimelapseConfig(intervalMs = DARK_INTERVAL_MS, stop = StopCondition.FRAME_COUNT),
+                lockedShutterNs = settings.shutterNs,
+                lockedIso = settings.iso,
+                jpegOrientation = jpegOrientation,
+                keepScreenOn = false,
+                name = manifest.name,
+                kind = manifest.kind,
+                darkFramesFor = sessionId,
+                darkCount = count,
             )
         }
 
@@ -221,6 +252,7 @@ class TimelapseCoordinator
             shutterNs: Long,
             iso: Int,
             orientation: Int,
+            kind: SessionKind = SessionKind.TIMELAPSE,
         ) = LaunchRequest(
             lensKey = lensKey,
             settings =
@@ -233,9 +265,11 @@ class TimelapseCoordinator
             lockedIso = iso,
             jpegOrientation = orientation,
             keepScreenOn = setup.keepScreenOn,
+            kind = kind,
         )
 
         private companion object {
+            const val DARK_INTERVAL_MS = 1_000L
             const val STEADY_DEGREES = 0.4f
             const val PROBE_FRAMES = 3
             const val NS_PER_MS = 1_000_000L

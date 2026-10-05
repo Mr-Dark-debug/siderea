@@ -9,20 +9,30 @@ import io.github.mrdarkdebug.siderea.core.capture.session.SessionStore
 import io.github.mrdarkdebug.siderea.core.export.BitmapTiff
 import io.github.mrdarkdebug.siderea.core.export.ExportException
 import io.github.mrdarkdebug.siderea.core.export.ExportPhase
+import io.github.mrdarkdebug.siderea.core.export.FrameDecoder
 import io.github.mrdarkdebug.siderea.core.export.MediaStorePublisher
 import io.github.mrdarkdebug.siderea.core.export.PublishKind
 import io.github.mrdarkdebug.siderea.core.export.TimelapseVideoExporter
 import io.github.mrdarkdebug.siderea.core.export.VideoSpec
 import io.github.mrdarkdebug.siderea.core.export.ZipExporter
 import io.github.mrdarkdebug.siderea.core.export.ZipSource
+import io.github.mrdarkdebug.siderea.core.processing.AstroProcessor
+import io.github.mrdarkdebug.siderea.core.processing.FileFrameSource
+import io.github.mrdarkdebug.siderea.core.processing.Levels
+import io.github.mrdarkdebug.siderea.core.processing.MasterDark
+import io.github.mrdarkdebug.siderea.core.processing.RgbImageIo
+import io.github.mrdarkdebug.siderea.core.processing.StackResult
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import java.io.File
 import javax.inject.Inject
@@ -46,6 +56,9 @@ sealed interface ExportState {
         val mime: String,
         val kind: PublishKind,
         val detail: String,
+        /** A second file made alongside, such as the 16-bit TIFF that goes with a stacked JPEG. */
+        val extra: File? = null,
+        val extraMime: String? = null,
     ) : ExportState
 
     data class Failed(
@@ -157,6 +170,103 @@ class ExportCoordinator
             }
         }
 
+        /**
+         * Star trails or an aligned stack from the session's JPEG frames, optionally with its dark frames
+         * subtracted. The result is a JPEG (to look at and share) plus a TIFF (16-bit for stacks).
+         */
+        fun startAstro(
+            sessionId: String,
+            mode: AstroMode,
+            useDarks: Boolean,
+            brighten: Boolean,
+        ) {
+            val handle = begin(sessionId) ?: return
+            val title = mode.label
+            val lights = jpegFrames(handle, skipMoved = false)
+            val darks = if (useDarks) handle.darkJpegs() else emptyList()
+            val stem = "${handle.dir.name}_${mode.fileTag}"
+            enqueue(sessionId, title) {
+                if (lights.size < MIN_ASTRO_FRAMES) throw ExportException("Needs at least $MIN_ASTRO_FRAMES frames.")
+                val job = currentCoroutineContext().job
+                val check = { job.ensureActive() }
+                val first = FrameDecoder.size(lights.first())
+                val sample = AstroMemory.sampleFor(first.width, first.height, mode)
+                var note = if (sample > 1) " Processed at 1/$sample size to fit in memory." else ""
+                val progress = { phase: String ->
+                    {
+                        done: Int,
+                        total: Int,
+                        ->
+                        mutable.value = ExportState.Working(sessionId, title, phase, done, total)
+                    }
+                }
+                val dark =
+                    if (darks.isNotEmpty()) {
+                        MasterDark.average(FileFrameSource(darks, sample), check)?.also {
+                            note +=
+                                " ${it.frames} dark frames subtracted."
+                        }
+                    } else {
+                        null
+                    }
+                val source = FileFrameSource(lights, sample)
+                val jpg = File(handle.exportsDir(), "$stem.jpg")
+                val tif = File(handle.exportsDir(), "$stem.tif")
+                val detail =
+                    when (mode) {
+                        AstroMode.TRAILS, AstroMode.COMET -> {
+                            val image =
+                                AstroProcessor.trails(
+                                    source,
+                                    dark,
+                                    if (mode == AstroMode.COMET) COMET_FADE else 1f,
+                                    check,
+                                    progress("Blending frames"),
+                                ) ?: throw ExportException("None of the frames could be read.")
+                            val shown = if (brighten) Levels.automatic(image).apply(image) else image
+                            RgbImageIo.writeJpeg(shown, jpg)
+                            RgbImageIo.writeTiff8(shown, tif)
+                            "${image.width}x${image.height} from ${lights.size} frames.$note"
+                        }
+
+                        AstroMode.STACK -> {
+                            val result =
+                                AstroProcessor.stack(source, dark, check, progress("Aligning and stacking"))
+                                    ?: throw ExportException(
+                                        "Not enough stars to line the frames up. Stacking needs a sky with at least " +
+                                            "$MIN_STARS clear stars.",
+                                    )
+                            val image = result.accumulator.toRgbImage()
+                            val levels = if (brighten) Levels.automatic(image) else null
+                            RgbImageIo.writeJpeg(levels?.apply(image) ?: image, jpg)
+                            tif.outputStream().buffered().use { result.accumulator.writeTiff16(it, levels) }
+                            stackReport(result, lights.size) + note
+                        }
+                    }
+                ExportState.Done(sessionId, title, jpg, "image/jpeg", PublishKind.IMAGE, detail, tif, "image/tiff")
+            }
+        }
+
+        private fun stackReport(
+            result: StackResult,
+            total: Int,
+        ): String {
+            val skipped =
+                if (result.rejected.isEmpty()) {
+                    ""
+                } else {
+                    " ${result.rejected.size} left out (" +
+                        result.rejected
+                            .groupBy { it.reason }
+                            .entries
+                            .joinToString { "${it.value.size} ${it.key.label}" } +
+                        ")."
+                }
+            return "Stacked ${result.used} of $total frames, worst shift ${"%.0f".format(result.maxShiftPixels)} px, " +
+                "rotation ${"%.2f".format(result.maxRotationDegrees)} deg, alignment error " +
+                "${"%.2f".format(result.meanRmsError)} px.$skipped"
+        }
+
         fun cancel() {
             job?.cancel()
         }
@@ -168,6 +278,14 @@ class ExportCoordinator
         /** Copies a finished export to Movies / Pictures / Downloads. Returns where it went. */
         fun saveToGallery(done: ExportState.Done): Uri =
             MediaStorePublisher(context).publish(done.file, done.file.name, done.mime, done.kind)
+
+        /** Saves [ExportState.Done.extra] (the TIFF beside a stacked JPEG) to the gallery too. */
+        fun saveExtraToGallery(done: ExportState.Done): Uri? =
+            done.extra?.let {
+                MediaStorePublisher(
+                    context,
+                ).publish(it, it.name, done.extraMime ?: "image/tiff", done.kind)
+            }
 
         /** A content URI another app may read, for the share sheet. */
         fun shareUri(done: ExportState.Done): Uri =
@@ -261,6 +379,9 @@ class ExportCoordinator
 
         private companion object {
             const val MOVED = "moved"
+            const val MIN_ASTRO_FRAMES = 2
+            const val MIN_STARS = 6
+            const val COMET_FADE = 0.93f
             const val BYTES_PER_MB = 1_000_000L
         }
     }

@@ -5,3 +5,7 @@ plugins {
 android {
     namespace = "io.github.mrdarkdebug.siderea.core.processing"
 }
+
+dependencies {
+    api(project(":core:export"))
+}

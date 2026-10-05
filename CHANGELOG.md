@@ -4,6 +4,68 @@ All notable changes are recorded here. Each milestone lists **what works**, **wh
 real device**, and **known issues**. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.5.0] - 2026-10-05
+
+**Milestone M4: astro.** Astro mode captures a sky session; the session screen turns it into star trails or an
+aligned stack, with dark-frame subtraction.
+
+### What works
+- **Astro mode** on the mode strip: frames per session (20 to 400, or until stopped), the gap between frames, and
+  a live line that says what you are about to do. The exposure comes from the normal SS and ISO controls. The
+  interval is the exposure plus the gap but never less than the measured save time, so the schedule cannot overrun
+  on every frame. A hint applies the 500 rule to the lens's 35 mm equivalent focal length.
+- **Same service, same safety** as timelapse: foreground service, wake lock, thermal / battery / storage guards,
+  pre-flight checklist, resume after interruption. Sessions are filed as `Astro`.
+- **Star trails**: every pixel keeps its brightest value across the frames. **Comet trails**: older light fades.
+- **Aligned stacking**: stars are detected (local maxima over the sky background with a "wings" check that keeps
+  hot pixels out), the frame's star pattern is matched to a reference frame's by trying a shift-and-rotation from
+  every comparable pair of stars and keeping the one that explains the most, refined by least squares; frames
+  are warped with bilinear sampling and averaged in float. Frames that cannot be matched (too few stars, a
+  different sky, a different size, unreadable) are **left out and reported with the reason**, never added
+  misaligned. The result is written as a **16-bit TIFF** (the mean of many 8-bit frames has real sub-level
+  precision) and a JPEG.
+- **Dark frames**: capture 5, 10 or 20 with the lens covered at the session's exact exposure and ISO; they are
+  averaged into a master dark and subtracted from every light frame before trails or stacking.
+- **Brighten** applies automatic levels (black point under the sky background, gamma lift) so a dark-sky result
+  is not almost black.
+- **Memory-aware**: working size is estimated from the frame size and the app's heap limit, and the work runs at
+  1/2, 1/3, ... size when a full-size stack would not fit, saying so in the result.
+- Everything runs in plain Kotlin behind a streaming `FrameAccumulator` interface, so only one frame is held in
+  memory plus the accumulator.
+
+### Verified
+- 278 host unit tests; the new ones render **synthetic star fields with known truth**: star centres to under 0.4 px,
+  shift recovered to 0.3 px and rotation to 0.05 degrees, a different sky rejected, noise reduced by stacking,
+  stars staying sharp where a plain average smears them, hot pixels removed by the master dark while stars
+  survive, trails and comet fading, cancellation, and the 16-bit TIFF keeping a value 8 bits cannot.
+- 47 emulator tests on Android 16 (adds a UI test that runs an Astro session, makes star trails, captures ten
+  dark frames, and a timing check of the processing core on large frames).
+- Timing on the emulator (a desktop x86 CPU, not a phone) for one 3 MP frame: decode 29 ms, star detection 73 ms,
+  matching 571 ms, warped stack add 276 ms (parallel over rows; 2.97 s before that optimisation), direct add
+  25 ms, trail add 49 ms, 16-bit TIFF 232 ms. Scale by about 4 for a 12 MP frame.
+- ktlint, detekt, Android lint and an R8 release build are clean.
+
+### Untested on a real device
+- Everything with real stars: detection thresholds, alignment over a multi-hour sequence with field rotation,
+  and the look of the result. The emulator's virtual room has no sky; its stack attempt is only checked to fail
+  gracefully.
+- Dark-frame subtraction on JPEG sources is an approximation (the camera has already denoised and tone-mapped);
+  it is most useful for hot pixels. Real gain needs RAW darks and lights (see known issues).
+- Speed and memory on 12 MP and larger frames on a phone: the benchmark test logs timings (tag `SideriaBench`)
+  but the emulator's numbers are not representative, and **no NDK or GPU alternative was benchmarked**. The
+  Kotlin implementation is kept because it is correct and simple, and the accumulator interface leaves room to
+  swap it.
+- Long runs: heat and battery over a night of 15 s frames.
+
+### Known issues
+- Processing reads the **JPEG** frames. RAW (DNG) sessions are saved but not yet decoded for stacking.
+- Alignment is a similarity transform (shift, rotation); it does not correct lens distortion or atmospheric drift.
+  Very wide lenses may show edge misalignment.
+- Trails are not gap-filled: with a 1 s gap a bright star shows a faint break between exposures.
+- Averaging is a plain mean: satellites and aeroplane trails stay in the stack at reduced brightness (no sigma
+  clipping yet).
+- Virtual Bulb, the exposure ramp, and accessibility polish are still to come.
+
 ## [0.4.0] - 2026-10-05
 
 **Milestone M3: export.** Sessions can now become video, a ZIP, or a TIFF. No new capture features.
