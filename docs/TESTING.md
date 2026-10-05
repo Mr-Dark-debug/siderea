@@ -56,6 +56,10 @@ make red builds meaningless. Run them before every release.
 * `CameraEngineInstrumentedTest`: the real Camera2 engine against the target's cameras: opens every lens, live
   metadata, a manual exposure confirmed in the sensor's own `CaptureResult`, a valid JPEG, a long exposure, DNG
   files (skipped per lens when the HAL's metadata is too sparse for `DngCreator`), lens switching and close.
+* `TimelapseServiceInstrumentedTest`: the real foreground service against the emulator's camera: documented
+  folder layout, actual per-frame values in `session.json`, clean stop and clean finish.
+* `TimelapseFlowTest`: through the real UI: the calculator is shown first, pre-flight can be cancelled, a
+  session runs, stops and its detail screen opens.
 * `CameraCapabilityReaderInstrumentedTest`: the real reader against whatever cameras the target has;
   consistency checks (unique ids, physical cameras point back to a logical parent, ranges agree with
   capabilities, one `1x` lens per facing, API 36 keys only on API 36, verdicts never over-claim, JSON
@@ -137,6 +141,8 @@ Run on the Pixel 10 (or any phone with several lenses). Tick off and report anyt
 
 ## M2 · Timelapse / sessions (v0.3.0)
 
+- [ ] (emulator) kill mid-session, relaunch, **Resume** continues numbering; (emulator) `dumpsys deviceidle
+      force-idle` with the screen off keeps frames coming. Both passed on the API 36 emulator.
 - [ ] **Measured minimum interval** is shown and is ≥ the real time between frames in `session.json`.
 - [ ] **2-hour background session** with the screen off, phone on a charger: all expected frames exist,
       notification stays, stop action works, no frame gap larger than the interval + overhead.

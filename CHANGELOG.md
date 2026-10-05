@@ -4,6 +4,54 @@ All notable changes are recorded here. Each milestone lists **what works**, **wh
 real device**, and **known issues**. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [0.3.0] - 2026-10-05
+
+**Milestone M2: timelapse, sessions, foreground service, resume.** Timelapse mode on the mode strip is now
+real. There is no video export yet (M3): frames and `session.json` are in app storage for now.
+
+### What works
+- **Timelapse capture** on the Camera2 engine from a **foreground service** (type camera, partial wake lock,
+  ongoing notification with a Stop action). Intervals by preset or ruler, stop after N frames, a duration or
+  never; exposure and focus locked from the current settings so frames stay consistent.
+- **Absolute schedule:** frame *n* is due at start + *n* × interval, so there is no drift. An overrun
+  re-anchors the schedule and tells you.
+- **Calculator** (shown first in the panel): minimum interval from a **measured** capture overhead (estimated
+  until the first frames are in, remembered afterwards), frame count, video length at a chosen fps, storage and
+  battery estimates.
+- **Pre-flight checklist**: interval vs. overhead, storage, battery, a steady-phone check from the gyro,
+  focus locked, exposure locked, airplane mode, exact-alarm and battery-optimisation fixes, notifications.
+- **Guards:** heat (slow down, pause, stop), battery, low storage. Each says what it did in plain words.
+- **Doze handling:** waits of 20 s or more use `AlarmManager` allow-while-idle alarms; a *keep screen on
+  (dimmed)* mode avoids Doze entirely.
+- **Sessions:** `yyyy-MM-dd_HHmm_Kind/{raw,jpeg,previews,darks,exports}` folders, `session.json` written
+  atomically, and a crash-safe `frames.jsonl` journal merged on load (a truncated last line is ignored). Each
+  frame records the actual `CaptureResult` values. Sessions list and detail screens (previews, rename, delete).
+- **Interrupted sessions:** after a crash or kill, the next launch offers **Resume** (continues numbering and
+  schedule) or **Finalize what was captured**.
+
+### Verified
+- 227 host unit tests (adds sessions, journal recovery, interval maths, guards, pre-flight).
+- 33 emulator tests on Android 16 (adds the real foreground service writing a session to disk and a UI test
+  for pre-flight → run → stop → session detail).
+- Manually on the emulator: kill-and-resume (6 frames before the kill, continued to 10 after Resume) and a
+  60 s run in **forced deep Doze with the screen off and unplugged**: 12 frames at a 5 s interval, none lost.
+- ktlint, detekt, Android lint and an R8 release build are clean. Lint caught two real crashes
+  (`canScheduleExactAlarms` needs API 31) that the API 36 emulator hides.
+
+### Untested on a real device
+- Long runs: the 2-hour background session, thermal behaviour and the heat guard on a warm phone.
+- Doze on hardware with a **30-minute interval** (the emulator's `force-idle` isn't the same as real standby).
+  Intervals shorter than ~20 s in deep Doze remain unreliable without the dimmed-screen mode: this is Android,
+  not something Siderea can fully remove.
+- Camera taken by another app mid-session, storage-full behaviour, notification permission flows on Android 13+.
+- Exact-alarm and battery-optimisation settings screens as shown by different manufacturers.
+
+### Known issues
+- No video export or contact sheet yet: arrives in M3 (v0.4.0).
+- Resume after a **device reboot** has not been tried: the journal is on disk, but only an app kill was tested.
+- A session's frame order is by timestamp; editing files by hand inside a session folder is not supported.
+- Astro, Long exposure and the exposure ramp are still not built.
+
 ## [0.2.0] - 2026-10-05
 
 **Milestone M1: photo mode.** The app now opens on a real viewfinder with full manual control. It was built

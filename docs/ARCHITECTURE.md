@@ -106,13 +106,26 @@ implementation of the same interface on 100 × 12 MP frames. A GPU path (OpenGL 
 the preview and for export-time per-frame operations. The winner is documented here with numbers.
 The NDK (r27+) is installed in the dev environment, but no native code exists yet.
 
-### Sessions and `session.json` (design, implemented in M2)
+### Sessions and `session.json` (M2)
 Every capture is a session folder in app-specific storage; export to MediaStore is on demand. Source frames
 are never deleted automatically. `session.json` records requested settings plus, for every frame, the
 *actual* `CaptureResult` values (exposure, ISO, frame duration, focus distance, CCT, sensor timestamp,
 orientation, optional GPS, capture errors). It is written continuously so a killed process can offer
 "resume" or "finalise what was captured". `kotlinx.serialization` is already in place and covered by the
 capability-report round-trip tests.
+
+**Journal.** `SessionHandle.appendFrame` writes one JSON line to `frames.jsonl` *before* anything else, so a
+frame survives a kill; `session.json` is rewritten atomically (temp file + rename) and the two are merged on
+load, ignoring a truncated last line. `SessionStore.interrupted()` lists sessions still marked running that no
+live run owns, which is what drives the Resume / Finalize prompt.
+
+### Timelapse runner and service (M2)
+`TimelapseRunner` (in `:core:capture`, plain Kotlin, unit-tested with a fake clock) owns the schedule: an
+absolute timeline that re-anchors on overrun, `GuardPolicy` decisions between frames, and the measured-overhead
+tracker. It talks to the camera only through `FrameCapturer`. In `:app`, `TimelapseService` (foreground
+service, type camera) holds a partial wake lock and a headless preview surface and drives the runner;
+`AndroidRunnerClock` waits with `AlarmManager` allow-while-idle alarms for waits of 20 s or more so Doze can't
+hold a frame back. The UI observes `CaptureSessionState`; it never owns the run.
 
 ### Settings
 Jetpack DataStore (Preferences) behind `SettingsRepository`. Host unit tests use an in-memory `DataStore`

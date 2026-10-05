@@ -28,7 +28,7 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 |---|---|---|---|
 | ✅ | **M0** Skeleton, design system, logo, Capability Inspector | v0.1.0 | done |
 | ✅ | **M1** Photo mode: full manual controls, RAW/JPEG, histogram, peaking | v0.2.0 | done, emulator-verified |
-| ⬜ | **M2** Timelapse: foreground service, sessions, `session.json`, resume | v0.3.0 | not started |
+| ✅ | **M2** Timelapse: foreground service, sessions, `session.json`, resume | v0.3.0 | done, emulator-verified |
 | ⬜ | **M3** Export: H.264/HEVC, fps, resolution, crop, deflicker | v0.4.0 | not started |
 | ⬜ | **M4** Astro: star trails, dark frames, aligned stacking | v0.5.0 | not started |
 | ⬜ | **M5** Virtual Bulb long exposure | v0.6.0 | not started |
@@ -46,11 +46,16 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
   <img src="docs/screenshots/camera-red.png" width="23%" alt="Red night-vision mode">
   <img src="docs/screenshots/inspector.png" width="23%" alt="Capability Inspector">
 </p>
+<p align="center">
+  <img src="docs/screenshots/timelapse-setup.png" width="23%" alt="Timelapse setup with calculator">
+  <img src="docs/screenshots/timelapse-running.png" width="23%" alt="A running timelapse">
+  <img src="docs/screenshots/timelapse-resume.png" width="23%" alt="Resume prompt after an interruption">
+</p>
 
 <sub>Captured on Android emulators, whose virtual cameras are simpler than a real phone's (the scene in the first
 shot is the emulator's test room). Real-device screenshots will replace these.</sub>
 
-## What it does today (v0.2.0)
+## What it does today (v0.3.0)
 
 - **Manual photo mode** on Camera2: shutter, ISO, focus, white balance (presets or Kelvin + tint) and exposure
   compensation, each with Auto / Manual. Shutter and ISO combine into P / S / I / M behaviour.
@@ -62,10 +67,16 @@ shot is the emulator's test room). Real-device screenshots will replace these.</
 - **Viewfinder aids:** live histogram with clipping, focus peaking, zebras, grid, a horizon level that also shows
   the camera's altitude for aiming at stars, **night view** (brightens the viewfinder only), self-timer, and
   volume-key / Bluetooth-remote shutter.
+- **Timelapse** with a foreground service: interval presets or a ruler, stop by frames / duration / until
+  stopped, a calculator (minimum interval from *measured* capture overhead, frames, video length, storage,
+  battery), a pre-flight checklist, locked exposure, heat / battery / storage guards, and a screen-dim mode.
+- **Sessions:** every capture is a folder with a crash-safe frame journal and `session.json` holding the *actual*
+  per-frame values. A session cut short (crash, kill, camera taken) is offered **Resume** or **Finalize** on the
+  next launch.
 - **Capability Inspector** for every camera, with a plain-language verdict per lens, exportable as JSON.
 - **Night-first design**: true black, one amber accent, a pure-red night-vision mode, 56 dp touch targets.
 
-Not built yet: timelapse, astro stacking, star trails, Virtual Bulb, export, the exposure ramp. They appear on the
+Not built yet: video export, astro stacking, star trails, Virtual Bulb, export, the exposure ramp. They appear on the
 mode strip and say when they arrive.
 
 ## Why
