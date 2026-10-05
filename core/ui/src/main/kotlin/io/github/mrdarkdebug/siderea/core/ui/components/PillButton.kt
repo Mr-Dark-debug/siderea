@@ -15,6 +15,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.mrdarkdebug.siderea.core.ui.theme.Siderea
@@ -83,3 +86,46 @@ fun PillButton(
 }
 
 private const val DISABLED_ALPHA = 0.4f
+
+/**
+ * A compact, full-radius toggle chip for the viewfinder's top row and panels. 48dp tall (the Material
+ * minimum), so it stays easy to hit even though it looks small.
+ */
+@Composable
+fun ChipButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    selected: Boolean = false,
+    enabled: Boolean = true,
+    description: String? = null,
+) {
+    val palette = Siderea.palette
+    val haptics = Siderea.haptics
+    val shape = SideriaShapes.pill
+    Box(
+        modifier =
+            modifier
+                .defaultMinSize(minWidth = SideriaDimens.touchTargetMin, minHeight = SideriaDimens.touchTargetMin)
+                .alpha(if (enabled) 1f else DISABLED_ALPHA)
+                .clip(shape)
+                .background(if (selected) palette.accentContainer else palette.surfaceRaised)
+                .then(if (selected) Modifier.border(SideriaDimens.hairline, palette.accent, shape) else Modifier)
+                .semantics {
+                    if (description != null) contentDescription = description
+                    this.selected = selected
+                }.clickable(enabled = enabled, role = Role.Button) {
+                    haptics.select()
+                    onClick()
+                }.padding(horizontal = SideriaSpacing.sm + SideriaSpacing.xxs),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = text,
+            style = Siderea.text.caption,
+            color = if (selected) palette.accent else palette.onBackground,
+            textAlign = TextAlign.Center,
+            maxLines = 1,
+        )
+    }
+}
