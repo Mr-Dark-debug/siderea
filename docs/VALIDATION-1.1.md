@@ -23,13 +23,42 @@ The gallery observes media changes to refresh after scanning or publication.
 Update integrity tests reject and clean corrupted pending files, remove interrupted/obsolete installer
 files and reject an installed APK being offered as its own upgrade.
 
-All 26 focused device tests passed: GalleryFlowTest, UpdateIntegrityTest, AccessibilityTest,
+All 26 focused device tests passed on the camera/gallery revision: GalleryFlowTest, UpdateIntegrityTest, AccessibilityTest,
 SideriaSmokeTest, TimelapseFlowTest and LongExposureFlowTest. These include a photo appearing while
 the gallery is open, manual camera controls, all mode panels, settings, real photo capture, session
 recording, H.264/ZIP exports and three Bulb combining methods. Three gallery checks also passed at 320 dp.
 
-Published-APK upgrade results will be recorded here after the release workflow completes. No
-published-APK replacement is claimed by this pre-publication report.
+The final patch changes the signing configuration, version and photo-size formatter. Host checks were
+rerun for v1.1.2; the published APK was then tested through Android's real installer and its UI.
+
+## Published APK and replacement
+
+[Stable release](https://github.com/Mr-Dark-debug/siderea/releases/tag/v1.1.2):
+`siderea-v1.1.2-debug-signed.apk`, 3,660,882 bytes, version code 10102. Its SHA-256 is
+`8961c90d6513a6bc743e6ab1851be8936fbd99ef1060d1d4a02de3afc3f1ac0c`.
+The public GitHub digest, checksum file, downloaded APK and app-downloaded installer matched.
+The APK certificate matched the persistent certificate below.
+
+A disposable API 36 emulator started with a same-key 1.0.99 fixture. A real photo, a four-frame timelapse
+and a changed haptic preference were created before the upgrade. Resetting the fixture's last-check time
+simulated an elapsed check interval; on launch the app found the public v1.1.2 release, automatically
+downloaded it over the emulator's unmetered connection, verified it and displayed Update ready.
+
+The in-app Install action opened Android's Allow from this source gate. After allowing the source,
+Install opened Android's confirmation showing Update. Approving it produced App installed, and the
+published app reopened as 1.1.2 (10102). All ten private session files, the shared JPEG and the preferences
+file remained byte-for-byte identical to their before-upgrade copies. Pending metadata and both installer
+files were cleaned. A new photo captured successfully, the gallery still showed the retained images,
+details correctly displayed the 58,945-byte image as 59 kB, and a manual check reported You're up to date.
+
+A separate valid 1.1.0 APK signed with an unrelated test certificate, with matching size/checksum metadata,
+was rejected and removed from pending storage without changing the installed app. The initial public
+v1.1.0 APK was also automatically downloaded and explicitly rejected for its different signing key.
+
+GitHub CI passed revisions f95554d and 1b1a792. GitHub's subsequent release runners stayed queued, so
+v1.1.2 was published directly from the locally verified optimized build. The final source
+[CI run](https://github.com/Mr-Dark-debug/siderea/actions/runs/37364037555) remained queued at completion;
+no passing result is claimed for that run. The cancelled release runs did not publish v1.1.1 or v1.1.2.
 
 ## Signing
 

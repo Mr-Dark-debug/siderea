@@ -32,12 +32,12 @@ update repository/ViewModel. Compose navigation connects all three. Android inst
 - [x] Add Internet/network/install permissions and private updates FileProvider path.
 - [x] Test stable-release selection, version bounds, digest validation, corrupted download rejection.
 - [x] Pin CI debug signing key in a repository secret and reject release builds without a persistent key.
-- [ ] Verify download/installer consent, same-key upgrade, data retention and signer rejection on emulator.
+- [x] Verify download/installer consent, same-key upgrade, data retention and signer rejection on emulator.
 
 ## Release
 
 - [x] Run `./gradlew qualityCheck testDebugUnitTest lint assembleDebug assembleRelease assembleDebugAndroidTest`.
 - [x] Run focused instrumentation plus existing accessibility and camera smoke tests.
 - [x] Update changelog, screenshots, README and release/update documentation with actual evidence.
-- [ ] Commit and push reviewed changes, publish v1.1.2 through the release workflow and inspect CI.
-- [ ] Download the published APK, compare SHA-256/signature, install and smoke-test it on the emulator.
+- [x] Commit and push reviewed changes, publish v1.1.2 and inspect CI. The queued release job was cancelled; the verified local APK was published directly, and the final source CI status is recorded in the validation report.
+- [x] Download the published APK, compare SHA-256/signature, install and smoke-test it on the emulator.

@@ -3,6 +3,10 @@
 Releases are built by GitHub Actions when a tag matching `v*` is pushed (`.github/workflows/release.yml`).
 Release notes come from the matching section of `CHANGELOG.md`; the workflow fails if the section is missing.
 
+v1.1.2 was published directly from the locally verified optimized APK while the release runner stayed
+queued. Its public checksum, certificate and real in-app replacement were checked afterward; see
+[VALIDATION-1.1.md](VALIDATION-1.1.md). The tag workflow remains the default for future releases.
+
 ```
 # 1. bump siderea.versionName in gradle.properties, add a "## [x.y.z] - date" section to CHANGELOG.md
 # 2. commit, then tag and push

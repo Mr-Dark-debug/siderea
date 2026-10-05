@@ -45,7 +45,11 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
   <img src="docs/screenshots/camera-auto.png" width="23%" alt="Simplified Auto camera and large shutter">
   <img src="docs/screenshots/gallery.png" width="23%" alt="Built-in gallery with date headings">
   <img src="docs/screenshots/gallery-calendar.png" width="23%" alt="Calendar with markers for dates with photos">
-  <img src="docs/screenshots/inspector.png" width="23%" alt="Capability Inspector">
+  <img src="docs/screenshots/updates.png" width="23%" alt="GitHub update settings after verified installation">
+</p>
+<p align="center">
+  <img src="docs/screenshots/gallery-details.png" width="23%" alt="Real photo capture and file details">
+  <img src="docs/screenshots/update-ready.png" width="23%" alt="Automatically downloaded and verified update">
 </p>
 <p align="center">
   <img src="docs/screenshots/timelapse-setup.png" width="23%" alt="Timelapse setup with calculator">
@@ -56,7 +60,7 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
   <img src="docs/screenshots/bulb-panel.png" width="23%" alt="Virtual bulb setup, warning that this camera has no manual shutter">
 </p>
 
-<sub>Captured on Android emulators. The first three show v1.1.0 using the emulator's moving test pattern;
+<sub>Captured on Android emulators. The first six show the v1.1.2 release and update flow using the emulator's moving test pattern;
 the remaining screenshots document earlier capture features. Real-device screenshots will replace these.</sub>
 
 ## What it does today (v1.1.2)
