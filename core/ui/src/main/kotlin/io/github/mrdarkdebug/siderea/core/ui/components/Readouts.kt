@@ -33,11 +33,14 @@ fun ReadoutCell(
         modifier = modifier.clearAndSetSemantics { contentDescription = "$label $value" },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // Long values ("1/120 A") drop to the smaller style instead of wrapping when text is enlarged.
         Text(
             text = value,
-            style = Siderea.text.readout,
+            style = if (value.length > LONG_VALUE) Siderea.text.readoutSmall else Siderea.text.readout,
             color = if (highlighted) palette.accent else palette.onBackground,
             textAlign = TextAlign.Center,
+            maxLines = 1,
+            softWrap = false,
         )
         Text(
             text = label.uppercase(Locale.ROOT),
@@ -47,6 +50,8 @@ fun ReadoutCell(
         )
     }
 }
+
+private const val LONG_VALUE = 5
 
 /** A rounded bar of [ReadoutCell]s, like the ISO / SS / EV strip under a viewfinder. */
 @Composable

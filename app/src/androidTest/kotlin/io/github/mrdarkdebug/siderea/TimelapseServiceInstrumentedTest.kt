@@ -152,6 +152,31 @@ class TimelapseServiceInstrumentedTest {
         }
     }
 
+    @Test
+    fun anExposureRampOnACameraThatCannotRampSaysSoAndStillCaptures() {
+        // The emulator's back camera has no manual exposure, so the ramp must fall back and tell the person.
+        val config =
+            TimelapseConfig(
+                intervalMs = 2_500,
+                stop = StopCondition.FRAME_COUNT,
+                frameCount = 2,
+                lockExposure = false,
+                rampExposure = true,
+            )
+        TimelapseService.start(context, request(config))
+        assertTrue(
+            "the session should complete",
+            waitFor(60_000) { latestManifest()?.status == SessionStatus.COMPLETED },
+        )
+        val manifest = latestManifest()!!
+        assertEquals(2, manifest.frames.count { it.error == null })
+        assertTrue(manifest.timelapse!!.rampExposure)
+        assertTrue(
+            "the session must record why it did not ramp: ${manifest.events}",
+            manifest.events.any { it.text.contains("Exposure ramp needs manual exposure") },
+        )
+    }
+
     private fun latestJournalFrames(): Int =
         runCatching { File(latestDir(), "frames.jsonl").readLines().count { it.isNotBlank() } }.getOrDefault(0)
 

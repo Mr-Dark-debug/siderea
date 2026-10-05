@@ -66,6 +66,7 @@ import io.github.mrdarkdebug.siderea.core.ui.components.PillButton
 import io.github.mrdarkdebug.siderea.core.ui.components.PillStyle
 import io.github.mrdarkdebug.siderea.core.ui.components.ReadoutCell
 import io.github.mrdarkdebug.siderea.core.ui.components.ShutterButton
+import io.github.mrdarkdebug.siderea.core.ui.theme.CappedFontScale
 import io.github.mrdarkdebug.siderea.core.ui.theme.Siderea
 import io.github.mrdarkdebug.siderea.core.ui.theme.SideriaShapes
 import io.github.mrdarkdebug.siderea.core.ui.theme.SideriaSpacing
@@ -244,6 +245,9 @@ private fun openSystemScreen(
     }
 }
 
+/** The camera chrome shares rows, so its text stops growing here; panels and dialogs grow fully. */
+private const val CHROME_MAX_FONT_SCALE = 1.25f
+
 @Composable
 private fun CameraContent(
     state: CameraUiState,
@@ -259,7 +263,7 @@ private fun CameraContent(
             .fillMaxSize()
             .padding(top = bars.calculateTopPadding(), bottom = nav.calculateBottomPadding()),
     ) {
-        TopRow(state, actions)
+        CappedFontScale(CHROME_MAX_FONT_SCALE) { TopRow(state, actions) }
         Viewfinder(
             state = state,
             analysis = analysis,
@@ -275,10 +279,14 @@ private fun CameraContent(
                     .padding(horizontal = SideriaSpacing.md),
         )
         EngineProblem(state, actions.onRetry)
-        ReadoutRow(state, actions)
-        StatusLine(state)
-        ModeStrip(state.mode, actions.onSelectMode)
-        BottomRow(state, actions, viewModel)
+        CappedFontScale(CHROME_MAX_FONT_SCALE) {
+            Column {
+                ReadoutRow(state, actions)
+                StatusLine(state)
+                ModeStrip(state.mode, actions.onSelectMode)
+                BottomRow(state, actions, viewModel)
+            }
+        }
     }
 }
 
