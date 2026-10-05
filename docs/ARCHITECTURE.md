@@ -161,6 +161,21 @@ and average reuse `TrailAccumulator` and `StackAccumulator`. `VirtualBulbProcess
 over the same streaming interface as the sky tools. On the capture side a bulb is a session of kind
 `LONG_EXPOSURE` using the timelapse runner with `interval = max(exposure, exposure + save time)`.
 
+### Exposure ramp (M6)
+`ExposureRamp` (pure Kotlin, `:core:capture`) holds the total exposure in stops relative to the lowest ISO. After
+each frame: error = 2.2 x log2(target / measured) in stops (the 2.2 converts encoded brightness to linear light),
+ignored inside a 0.1 stop dead band, otherwise half of it is applied, clamped to `maxStepStops` (0.25). `split()` then
+gives the shutter as much of the total as its limits allow and ISO the remainder. The service builds it from the
+lens's `ExposureLimits` (shutter capped at 60 % of the interval, ISO capped by the setup) and
+`EngineFrameCapturer` measures each saved JPEG at about 160 px to feed it. It is a controller on measured output, not
+a model of the camera, so it works on any lens that honours manual exposure.
+
+### Accessibility (M6)
+Dials expose `progressBarRangeInfo` and `setProgress`; icon buttons carry content descriptions; readout cells merge
+into one spoken label ("SS 1/120 A"). `CappedFontScale` limits the camera chrome to 1.25x so single-line rows stay
+single-line; panels and every other screen follow the system size. `AccessibilityTest` runs the Android
+Accessibility Test Framework on the main screens.
+
 ### Settings
 Jetpack DataStore (Preferences) behind `SettingsRepository`. Host unit tests use an in-memory `DataStore`
 because DataStore's file replacement uses `File.renameTo`, which fails on Windows hosts when the target

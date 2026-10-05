@@ -4,6 +4,57 @@ All notable changes are recorded here. Each milestone lists **what works**, **wh
 real device**, and **known issues**. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] - 2026-10-05
+
+**Milestone M6: exposure ramp, polish, accessibility. First stable release.** Every feature in the original brief
+is built. What has **not** happened is a run on a real phone: see the list below before trusting it with a night
+you cannot repeat.
+
+### What works
+- **Exposure ramp** for timelapses over changing light (a toggle next to LOCK EXPOSURE). The controller keeps one
+  number, the total exposure in stops, compares each finished frame's brightness (from its own JPEG) with a
+  target, and moves the total by half the error, never more than a quarter of a stop per frame and not at all
+  inside a 0.1 stop dead band. The total is split shutter first (cleanest image), then ISO up to a cap (1600 by
+  default); the shutter is capped at 60 % of the interval. It reports when both are at a limit, carries on from
+  the last frame's exposure after an interruption, and falls back to per-frame metering with a note in the session
+  if the lens has no manual exposure or the frames are RAW-only. The per-frame values land in `session.json`;
+  deflicker at export finishes the job.
+- **Accessibility pass:** the Android Accessibility Test Framework runs over the camera screen, all four mode
+  panels, the SS / ISO / EV / WB / FOCUS panels and Settings, and finds nothing. Text at 1.6x system size was
+  checked by eye: the camera's own readout rows now stay on one line (values shrink instead of wrapping, chrome
+  stops growing at 1.25x), panels scroll and scale fully.
+- Everything from 0.1.0 to 0.6.0: Capability Inspector; manual photo (JPEG / RAW / RAW+JPEG, histogram, peaking,
+  zebras, level, night view, red mode); timelapse with service, sessions, resume, guards and pre-flight; video /
+  ZIP / TIFF export with deflicker; Astro with star trails, aligned stacking and dark frames; Virtual Bulb.
+
+### Verified
+- 303 host unit tests (adds the ramp simulated against sunsets and sunrises with a pretend camera: smooth steps,
+  brightness near target, shutter before ISO, limits respected and reported, dead band, bias; and old-session
+  compatibility for new config fields).
+- 53 emulator tests on Android 16 (adds the accessibility checks, and a service-level test that asks for a ramp on
+  a camera that cannot ramp, which must say so in `session.json` and still capture). A UI test that toggled the ramp
+  chip was dropped: on the emulator its result depended on how slow the software-rendered GPU had become.
+- ktlint, detekt, Android lint (including the instrumentation sources) and an R8 release build are clean.
+
+### Untested on a real device (everything below needs a phone)
+- **All camera behaviour on hardware.** Siderea has only ever opened the emulator's virtual cameras. It was designed
+  around a real Pixel 10 capability report, which is not the same as running on one.
+- The physical-stream path for the 0.6x and 5x lenses, 16 s exposures, DNG creation from a physical camera,
+  computed Kelvin / tint colour, manual focus range, software priority modes, volume keys and remotes.
+- Long sessions: 2-hour background runs, Doze with 30-minute intervals, thermal behaviour, battery estimates.
+- Video playback in Photos / VLC, HEVC and AV1 on hardware, 4K at 60 fps.
+- Star detection and alignment on real skies over hours (synthetic fields only so far), RAW darks.
+- The exposure ramp over a real sunset: the control law is simulated, not observed.
+- TalkBack by hand (only the automated checks ran), and Red mode on every dialog.
+
+### Known issues
+- RAW (DNG) frames are saved but not decoded: stacking, trails, bulb combining and ramp metering use the JPEGs.
+- Averaging is a plain mean (no sigma clipping), so satellites and planes survive in stacks at reduced strength.
+- No GPS tagging, no localisation (English only), no live preview of a growing virtual bulb.
+- Releases are signed with the debug key until the signing secrets are added (see `docs/RELEASING.md`), so updating
+  from a later release-signed build needs an uninstall first.
+- The emulator UI tests need a freshly booted emulator for a clean full run and retry once on a slow one.
+
 ## [0.6.0] - 2026-10-05
 
 **Milestone M5: Virtual Bulb.** The LONG EXPOSURE mode is real: a long exposure assembled from many short ones.

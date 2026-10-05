@@ -70,6 +70,8 @@ make red builds meaningless. Run them before every release.
   line.
 * `LongExposureFlowTest`: through the real UI: Long exposure mode, a bulb run until stopped, then Add light, Keep
   brightest and Average from the session screen (JPEG and TIFF written for each).
+* `AccessibilityTest`: the Accessibility Test Framework over the camera screen, every mode panel, each manual-control
+  panel and Settings.
 * `CameraCapabilityReaderInstrumentedTest`: the real reader against whatever cameras the target has;
   consistency checks (unique ids, physical cameras point back to a logical parent, ranges agree with
   capabilities, one `1x` lens per facing, API 36 keys only on API 36, verdicts never over-claim, JSON
@@ -195,6 +197,14 @@ Run on the Pixel 10 (or any phone with several lenses). Tick off and report anyt
 
 ## M6 · Exposure ramp and polish (v1.0.0)
 
-- [ ] Sunset-to-night run: exposure changes smoothly, no visible steps, bounded by the configured max step.
-- [ ] TalkBack can operate every screen; text at 200 % system font size does not clip.
+- [ ] Sunset-to-night run with RAMP EXPOSURE on (JPEG, manual-exposure lens): `session.json` shows shutter
+      lengthening first and ISO rising only after, with no step larger than a quarter of a stop between frames;
+      the video (with deflicker off) shows no visible brightness jumps. Repeat with a sunrise.
+- [ ] Ramp on a RAW-only session or a lens without manual exposure: the session says it fell back to per-frame
+      metering (emulator-verified; confirm on the phone).
+- [ ] TalkBack can operate every screen, including the ruler dials (swipe up / down to change a value). The
+      automated Accessibility Test Framework checks pass; this is the by-hand half.
+- [ ] Text at 200 % system font size: panels scroll and nothing important is clipped. (The camera readout rows stop
+      growing at 1.25x on purpose.) Checked by eye at 1.6x on an emulator only.
 - [ ] Red mode stays legible at every screen and dialog.
+- [ ] A fresh install, first launch to first photo, takes under a minute and asks for nothing but the camera.
