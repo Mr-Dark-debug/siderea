@@ -23,8 +23,13 @@ The gallery observes media changes to refresh after scanning or publication.
 Update integrity tests reject and clean corrupted pending files, remove interrupted/obsolete installer
 files and reject an installed APK being offered as its own upgrade.
 
-The final focused device regression and published-APK upgrade results will be recorded here after the
-release workflow completes. No published-APK replacement is claimed by this pre-publication report.
+All 26 focused device tests passed: GalleryFlowTest, UpdateIntegrityTest, AccessibilityTest,
+SideriaSmokeTest, TimelapseFlowTest and LongExposureFlowTest. These include a photo appearing while
+the gallery is open, manual camera controls, all mode panels, settings, real photo capture, session
+recording, H.264/ZIP exports and three Bulb combining methods. Three gallery checks also passed at 320 dp.
+
+Published-APK upgrade results will be recorded here after the release workflow completes. No
+published-APK replacement is claimed by this pre-publication report.
 
 ## Signing
 
