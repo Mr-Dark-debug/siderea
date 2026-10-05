@@ -131,5 +131,53 @@ exists; real on-disk persistence is covered by an emulator test (`redModeToggleS
   shrinker regression fails CI, not a user.
 * Open-source licences are generated at build time (AboutLibraries) from the resolved dependency graph.
 
+## The photo engine (M1)
+
+```
+CaptureSettings  --RequestPlanner-->  RequestPlan  --RequestApplier-->  CaptureRequest.Builder
+ (user intent)    (clamps, preview     (Android-free)                    (the only place keys are set)
+                   cap, WB decision)
+```
+
+* **One thread, one open camera.** `CameraEngine` owns a `HandlerThread`. The main thread calls suspend
+  functions and reads `StateFlow`s. Open, close and "camera taken by another app" are modelled as state, with
+  human-readable messages mapped from Camera2's error codes.
+* **Planning is pure.** `RequestPlanner` turns settings into a `RequestPlan`: values clamped to the lens, frame
+  duration chosen so a 16 s shutter is legal, preview exposure capped, white balance resolved. It is unit tested
+  against the real Pixel 10 report. `RequestApplier` is the only code that touches `CaptureRequest` keys.
+* **Lenses.** `LensCatalog` builds the lens list from the capability report. A logical camera's default lens
+  opens as the logical camera (the most compatible path); every other lens is a **physical stream**
+  (`OutputConfiguration.setPhysicalCameraId`), with sensor settings also set per physical camera via
+  `setPhysicalCameraKey` when the HAL lists those keys. If the phone refuses the physical streams, the engine
+  falls back to the logical camera with `CONTROL_ZOOM_RATIO` and says so.
+* **Streams.** Preview (a `SurfaceTexture`), plus a JPEG reader and/or a `RAW_SENSOR` reader depending on the
+  chosen format. That is three streams at most, inside what a FULL-level camera guarantees. Analysis frames
+  come from `TextureView.getBitmap` on a small bitmap rather than a fourth stream, which a FULL camera need not
+  support alongside RAW.
+* **Long exposures.** A manual shot longer than half a second pauses the repeating preview, captures, and
+  restarts it. While the user has a 16 s shutter selected the preview runs at a capped shutter with raised ISO
+  (`PreviewExposure`) and any shortfall is made up by a *display-only* gain, so the viewfinder stays alive and
+  the saved photo still uses the exact exposure. Night view uses the same display gain.
+* **Results over requests.** Live readouts and the saved facts come from `CaptureResult`, not from what was
+  asked for, because the sensor rounds and the HAL overrides.
+* **DNG.** `DngCreator` is fed the physical camera's result when the lens is a physical stream. Some HALs return
+  results too sparse for it; that fails with a clear message and still keeps the JPEG.
+
+### White balance without Android 16 CCT
+Many cameras, the Pixel 10 included, accept only per-channel gains and a 3x3 matrix. `WhiteBalanceMath` picks
+the illuminant (blackbody xy for the chosen Kelvin, shifted off the locus for tint), interpolates the sensor's
+`SENSOR_COLOR_TRANSFORM1/2` by mired between its two calibration illuminants, and derives the gains that make
+that illuminant neutral, then a matrix (Bradford-adapted to D65, normalised so white stays white). Checked
+against published CIE values and hand-worked examples in `WhiteBalanceMathTest`. When a camera does offer the
+Android 16 controls they are used instead.
+
+### Software shutter and ISO priority
+`SoftwareAe` runs on the viewfinder's mean luma a few times a second, damped, with a dead band, moving whichever
+of shutter or ISO the user left on automatic. It is convergence-tested on a simulated scene.
+
+### State
+`CameraViewModel` holds `CameraUiState`; the histogram and masks are a separate flow so only the overlays
+redraw. Preferences (last lens, settings, aids) are one JSON blob in DataStore.
+
 ## Testing
 See [TESTING.md](TESTING.md): automated coverage, how to run it, and the manual real-device checklist.

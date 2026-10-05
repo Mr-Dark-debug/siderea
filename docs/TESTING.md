@@ -22,6 +22,11 @@ Pure logic, no device:
 | Repository | load once, refresh, failure and retry |
 | Settings | defaults, persistence, reset, corrupt-file fallback (in-memory `DataStore`) |
 | Design system | WCAG AA contrast of every text/background pair in both palettes |
+| Real-device fixture | lens catalogue, limits, verdicts and zoom labels computed from the **real Pixel 10 report** |
+| Colour maths | blackbody chromaticity vs published CIE values, gain monotonicity, white-preserving matrix, tint direction |
+| Request planning | clamping, 16 s frame duration, preview exposure cap, focus/WB decisions, tap-to-sensor mapping |
+| Viewfinder analysis | histogram, clipping, focus peaking, zebras; software auto-exposure convergence |
+| Orientation | JPEG/EXIF orientation formula and the horizon level |
 
 Later milestones add: interval/overhead validation, storage and battery estimates, the exposure-ramp
 algorithm, stacking maths and star alignment on synthetic frames, `session.json` round-trip.
@@ -46,8 +51,11 @@ make red builds meaningless. Run them before every release.
 ```
 
 * `SideriaSmokeTest`: home shows the brand and honest mode status, cameras are read, Capability Inspector
-  lists the device, **Copy as JSON** produces a parsable report on the clipboard, red mode survives activity
+  lists the device, a photo is taken and appears in the gallery, **Copy as JSON** produces a parsable report on the clipboard, red mode survives activity
   recreation (real DataStore on disk), reset restores defaults, Settings reaches the Inspector and licences.
+* `CameraEngineInstrumentedTest`: the real Camera2 engine against the target's cameras: opens every lens, live
+  metadata, a manual exposure confirmed in the sensor's own `CaptureResult`, a valid JPEG, a long exposure, DNG
+  files (skipped per lens when the HAL's metadata is too sparse for `DngCreator`), lens switching and close.
 * `CameraCapabilityReaderInstrumentedTest`: the real reader against whatever cameras the target has;
   consistency checks (unique ids, physical cameras point back to a logical parent, ranges agree with
   capabilities, one `1x` lens per facing, API 36 keys only on API 36, verdicts never over-claim, JSON
@@ -87,14 +95,45 @@ Install the APK, open **Capability Inspector**.
 
 ## M1 · Photo mode (v0.2.0)
 
-- [ ] Shutter at the sensor's longest exposure: the saved frame's EXIF/DNG exposure time equals the request
-      (compare with `CaptureResult`, not the UI).
-- [ ] Each lens: unsupported controls are disabled with an explanation, supported ones work.
-- [ ] RAW: the DNG opens in Lightroom / Darktable / Google Photos with correct colour and orientation.
-- [ ] Focus slider: ∞ snap is truly at infinity (shoot a distant light, compare with stock camera).
-- [ ] Night-view boost brightens the viewfinder only; the saved frame is unchanged.
-- [ ] Histogram, focus peaking, zebras follow the scene with no preview jank (≥ 60 fps UI).
-- [ ] Volume key and self-timer (2 / 5 / 10 s) fire exactly once.
+Run on the Pixel 10 (or any phone with several lenses). Tick off and report anything that fails.
+
+**Lenses and streams**
+- [ ] The lens chips show exactly the lenses you can see in the stock camera (Pixel 10: 0.6x, 1x, 5x back; 0.9x,
+      1x front) and each switch opens in under ~1 s.
+- [ ] For 0.6x and 5x, the image really is that lens, not a crop of the main camera. If Siderea shows a
+      "zooms the main camera instead" message, note it and attach the Inspector JSON.
+- [ ] RAW on 0.6x and 5x opens in Lightroom/Darktable/Photos with the right field of view and colour.
+
+**Exposure**
+- [ ] Manual shutter 1/100 + ISO 400: the viewfinder brightness is stable and the saved EXIF exposure equals the
+      requested value (check Pixel's file info or `exiftool`).
+- [ ] A **16 s** exposure at ISO 800 on the 1x lens: the viewfinder stays alive (with the "previews at a shorter
+      exposure" hint), the progress bar counts to 16 s, the file appears, the stop button aborts cleanly.
+- [ ] The saved long exposure is *brighter* than the live preview looked without night view (the preview is
+      deliberately conservative); with night view on the preview approaches it.
+- [ ] Shutter priority (shutter manual, ISO auto) and ISO priority settle within ~2 s and do not hunt.
+
+**Focus**
+- [ ] Autofocus + tap-to-focus: the reticle appears where you tap and the focus follows it (watch peaking).
+- [ ] Manual focus: the ∞ end of the dial is truly infinity on a distant light; the near end of the dial reaches a
+      sensible close distance. Report the nearest sharp distance you measure (Siderea assumes 10 cm).
+- [ ] The 0.6x lens shows "fixed-focus" in the focus panel and the control is disabled.
+
+**White balance**
+- [ ] Kelvin 2800K under a tungsten bulb and 5500K outdoors both look neutral to the eye, and tint ±20 moves
+      green↔magenta in the right direction. Compare with the stock camera on a grey card.
+- [ ] WB presets (DAY, CLOUD, TUNGSTEN, FLUOR, SHADE) change the colour and none is garish.
+
+**Aids and controls**
+- [ ] Histogram follows the scene; clipped ends turn red when >1 % of pixels clip.
+- [ ] Focus peaking highlights sharp edges and ignores blur; zebras appear on blown highlights.
+- [ ] Level line is amber within 1° on a tripod; pointing at the sky shows ALT instead of the line.
+- [ ] Night view brightens the viewfinder only (the photo is unchanged).
+- [ ] Volume keys and a Bluetooth selfie remote take one photo each (holding the key does not burst); self-timer
+      2/5/10 s counts down and can be cancelled with the shutter.
+- [ ] Photos taken with the phone held sideways are saved the right way up, JPEG and DNG.
+- [ ] Take another app's camera (open the stock camera): Siderea says so in plain language and recovers with
+      **Try again** once the other app is closed.
 
 ## M2 · Timelapse / sessions (v0.3.0)
 
