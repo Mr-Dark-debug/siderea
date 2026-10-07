@@ -2,9 +2,10 @@
 
 Siderea checks the public stable release at
 `https://api.github.com/repos/Mr-Dark-debug/siderea/releases/latest` when the app enters the foreground,
-at most once per six hours after a successful check. Settings offers an immediate manual check and an
+at most once per six hours after a successful check. **Settings → Updates** offers an immediate manual check and an
 Automatic updates switch. No GitHub login is needed. Automatic downloads use unmetered connections;
-on mobile data use Download in Settings. Downloads can be cancelled and failed downloads can be retried.
+on mobile data use Download on the Updates page. It shows the installed version, last successful check,
+download progress and verification status. Downloads can be cancelled and failed downloads can be retried.
 
 A release must contain exactly the expected versioned APK, a GitHub SHA-256 digest and a reasonable size.
 The client limits metadata/download sizes, accepts only HTTPS and known GitHub redirect hosts, hashes

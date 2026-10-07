@@ -16,7 +16,10 @@ data class GalleryPhoto(
     val sessionId: String? = null,
     val exposureNs: Long? = null,
     val iso: Int? = null,
+    val sessionExport: Boolean = false,
 ) {
+    val editable: Boolean get() = mime == "image/jpeg" || mime == "image/png"
+
     fun date(zone: ZoneId = ZoneId.systemDefault()): LocalDate =
         Instant.ofEpochMilli(capturedAt).atZone(zone).toLocalDate()
 }

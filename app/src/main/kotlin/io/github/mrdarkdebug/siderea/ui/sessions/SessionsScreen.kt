@@ -277,7 +277,12 @@ fun SessionDetailScreen(
             }
         }
         if (astroDialog && d != null) {
-            if (d.manifest.kind == SessionKind.LONG_EXPOSURE) {
+            if (d.manifest.timelapse?.skyPreset == io.github.mrdarkdebug.siderea.core.capture.session.SkyPreset.MOON) {
+                MoonDialog(d, { astroDialog = false }) {
+                    astroDialog = false
+                    viewModel.exportBulb(id, io.github.mrdarkdebug.siderea.core.processing.BulbMode.AVERAGE)
+                }
+            } else if (d.manifest.kind == SessionKind.LONG_EXPOSURE) {
                 BulbDialog(d, { astroDialog = false }) { mode ->
                     astroDialog = false
                     viewModel.exportBulb(id, mode)

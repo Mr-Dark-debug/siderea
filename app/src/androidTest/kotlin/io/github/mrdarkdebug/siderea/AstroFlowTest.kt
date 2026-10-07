@@ -4,10 +4,13 @@ import android.Manifest
 import android.content.Context
 import android.os.Build
 import androidx.compose.ui.test.ExperimentalTestApi
+import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -68,12 +71,17 @@ class AstroFlowTest {
     ): List<File> =
         sessionsRoot.walkTopDown().filter { it.extension == extension && it.parentFile?.name == folder }.toList()
 
-    private fun startAstroSession(frames: Int) {
+    private fun startAstroSession(
+        frames: Int,
+        moon: Boolean = false,
+    ) {
         rule.waitUntilAtLeastOneExists(hasContentDescription("Take photo"), timeoutMillis = 20_000)
         rule.onNodeWithText("ASTRO").performClick()
         rule.waitUntilAtLeastOneExists(hasContentDescription("Start astro session"), 5_000)
+        if (moon) rule.onNodeWithContentDescription("Moon preset").performScrollTo().performClick()
+        rule.onNodeWithText("Advanced").performScrollTo().performClick()
         rule.waitUntilAtLeastOneExists(hasText("GAP BETWEEN FRAMES"), 5_000)
-        rule.onNodeWithContentDescription("Gap 1 seconds").performClick()
+        rule.onNodeWithContentDescription("Gap 1 seconds").performScrollTo().performClick()
         rule.onNodeWithContentDescription("Start astro session").performClick()
         rule.waitUntilAtLeastOneExists(hasText("BEFORE YOU START"), 10_000)
         rule.onNodeWithText("Start").performClick()
@@ -89,9 +97,14 @@ class AstroFlowTest {
     fun astroPanelExplainsTheExposureAndTheGap() {
         rule.waitUntilAtLeastOneExists(hasContentDescription("Take photo"), timeoutMillis = 20_000)
         rule.onNodeWithText("ASTRO").performClick()
-        rule.waitUntilAtLeastOneExists(hasText("one frame every", substring = true), 5_000)
-        rule.waitUntilAtLeastOneExists(hasText("FRAMES"), 5_000)
-        rule.waitUntilAtLeastOneExists(hasText("GAP BETWEEN FRAMES"), 5_000)
+        rule.waitUntilAtLeastOneExists(hasText("Every ", substring = true), 5_000)
+        rule.waitUntilAtLeastOneExists(hasText("CAPTURE LENGTH"), 5_000)
+        rule.onNodeWithContentDescription("Night sky preset").assertExists()
+        rule.onNodeWithContentDescription("40 frames").performScrollTo().performClick()
+        rule.onAllNodesWithText("ASTRO").onLast().performClick()
+        rule.onNodeWithContentDescription("40 frames").performScrollTo().assertIsSelected()
+        rule.onNodeWithText("Advanced").performScrollTo().performClick()
+        rule.onNodeWithContentDescription("Gap 1 seconds").performScrollTo().assertExists()
     }
 
     @Test
@@ -102,6 +115,7 @@ class AstroFlowTest {
         rule.onNode(hasScrollAction()).performScrollToNode(hasText("Trails / stack"))
         rule.onNodeWithText("Trails / stack").performClick()
         rule.waitUntilAtLeastOneExists(hasText("SKY PROCESSING"), 5_000)
+        rule.onNodeWithText("STAR TRAILS").performClick()
         rule.onNodeWithText("Start").performClick()
         rule.waitUntilAtLeastOneExists(hasText("STAR TRAILS READY"), 60_000)
         assertTrue("trails JPEG", files("exports", "jpg").isNotEmpty())
@@ -119,6 +133,16 @@ class AstroFlowTest {
         // The finished screen stays up until dismissed; leave the app as the next test expects it.
         rule.onNodeWithText("Back to camera").performClick()
         assertTrue("ten dark frames", files("darks", "jpg").size >= 10)
+    }
+
+    @Test fun moonFramesMakeAPhotoWithoutRequiringStars() {
+        startAstroSession(frames = 3, moon = true)
+        rule.onNode(hasScrollAction()).performScrollToNode(hasText("Create moon photo"))
+        rule.onNodeWithText("Create moon photo").performClick()
+        rule.waitUntilAtLeastOneExists(hasText("MOON PHOTO"), 5000)
+        rule.onNodeWithText("Start").performClick()
+        rule.waitUntilAtLeastOneExists(hasText("MOON PHOTO READY"), 60_000)
+        assertTrue(files("exports", "jpg").isNotEmpty())
     }
 
     private companion object {

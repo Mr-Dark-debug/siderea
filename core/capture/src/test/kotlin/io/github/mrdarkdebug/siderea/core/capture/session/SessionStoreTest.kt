@@ -54,6 +54,37 @@ class SessionStoreTest {
     private fun newSession() = store.create(SessionKind.TIMELAPSE) { id, created -> manifest(id, created) }
 
     @Test
+    fun `deleting JPEG retains RAW and cannot reappear from the journal`() {
+        val session = newSession()
+        val frame = frame(0).copy(hasDng = true, dngBytes = 20)
+        session.appendFrame(frame)
+        session.jpegFile(frame.name).writeText("jpeg")
+        session.rawFile(frame.name).writeText("raw")
+        session.finish(SessionStatus.COMPLETED)
+        session.removeMedia(frame.name, raw = false)
+        val reopened = store.open(session.id)!!
+        assertFalse(reopened.frames.single().hasJpeg)
+        assertTrue(reopened.frames.single().hasDng)
+        assertTrue(reopened.rawFile(frame.name).isFile)
+        assertFalse(reopened.jpegFile(frame.name).exists())
+        assertEquals(0L, reopened.frames.single().jpegBytes)
+    }
+
+    @Test(expected = IllegalStateException::class)
+    fun `running session frames cannot be deleted`() {
+        val session = newSession()
+        session.appendFrame(frame(0))
+        session.removeMedia(SessionLayout.frameName(0), raw = false)
+    }
+
+    @Test(expected = IllegalArgumentException::class)
+    fun `frame deletion rejects paths`() {
+        val session = newSession()
+        session.finish(SessionStatus.COMPLETED)
+        session.removeMedia("../session", raw = false)
+    }
+
+    @Test
     fun `a new session gets the documented folder layout`() {
         val s = newSession()
         listOf("raw", "jpeg", "previews", "darks", "exports").forEach { assertTrue(File(s.dir, it).isDirectory) }

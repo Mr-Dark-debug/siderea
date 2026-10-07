@@ -10,25 +10,25 @@
 
 ### 1. Gallery management
 
-- [ ] Add `SessionHandle.removeMedia(name, raw)` with source-name validation, RUNNING rejection and durable journal/manifest updates. Test paired-media retention and reopening without resurrection in SessionStoreTest.
-- [ ] Add `PhotoEdit`, `PhotoRenderer`, `GalleryEditor` for crop/rotation/mirror and color controls. The editor calls `GalleryRepository.saveCopy(photo, edit)`; return the saved GalleryPhoto, retain source date and EXIF and remove pending MediaStore rows on errors/cancellation.
-- [ ] Add repository deletion with owned MediaStore selection and session-path validation; reject active exports. Add processed JPEG listing. Add busy/error mutation state in GalleryViewModel.
-- [ ] Wire viewer edit/delete, grid selection/share/delete, confirmation and refreshed viewer items. Verify originals unchanged, new copy geometry and delete behavior on emulator.
+- [x] Add `SessionHandle.removeMedia(name, raw)` with source-name validation, RUNNING rejection and durable journal/manifest updates. Test paired-media retention and reopening without resurrection in SessionStoreTest.
+- [x] Add `PhotoEdit`, `PhotoRenderer`, `GalleryEditor` for crop/rotation/mirror and color controls. The editor calls `GalleryRepository.saveCopy(photo, edit)`; return the saved GalleryPhoto, retain source date and EXIF and remove pending MediaStore rows on errors/cancellation.
+- [x] Add repository deletion with owned MediaStore selection and session-path validation; reject active exports. Add processed JPEG listing. Add busy/error mutation state in GalleryViewModel.
+- [x] Wire viewer edit/delete, grid selection/share/delete, confirmation and refreshed viewer items. Verify originals unchanged, new copy geometry and delete behavior on emulator.
 
 ### 2. Sky shooting
 
-- [ ] Add serializable preset/config defaults and `SkyCapturePolicy` with exposure clamp, far focus, interval calculation and mode-specific launch setup. Host tests compare UI cadence to persisted launch config and verify limited lenses.
-- [ ] Wire named presets, short summary, duration and advanced controls into AstroPanel. Add Astro option to TimelapsePanel and persist session kind/config. Implement cancelable setup countdown.
-- [ ] Choose default session processing from recorded preset. Run AstroFlowTest and new astro-timelapse capture/export tests.
+- [x] Add serializable preset/config defaults and `SkyCapturePolicy` with exposure clamp, far focus, interval calculation and mode-specific launch setup. Host tests compare UI cadence to persisted launch config and verify limited lenses.
+- [x] Wire named presets, short summary, duration and advanced controls into AstroPanel. Add Astro option to TimelapsePanel and persist session kind/config. Implement cancelable setup countdown.
+- [x] Choose default session processing from recorded preset. Run AstroFlowTest and new astro-timelapse capture/export tests.
 
 ### 3. Settings and updates
 
-- [ ] Replace verbose cards with concise groups/rows; add reset confirmation and dedicated Updates page with status/version/check time/release link and consistent retry/install actions.
-- [ ] Keep updater integrity policy and source-permission flow; add UI navigation and accessibility checks.
+- [x] Replace verbose cards with concise groups/rows; add reset confirmation and dedicated Updates page with status/version/check time/release link and consistent retry/install actions.
+- [x] Keep updater integrity policy and source-permission flow; add UI navigation and accessibility checks.
 
 ### 4. Verification and release
 
-- [ ] Run `./gradlew.bat qualityCheck testDebugUnitTest :app:lint :app:assembleDebug :app:assembleRelease :app:assembleDebugAndroidTest --max-workers=2 --console=plain`; inspect every exit status and test report.
+- [x] Run `./gradlew.bat qualityCheck testDebugUnitTest :app:lint :app:assembleDebug :app:assembleRelease :app:assembleDebugAndroidTest --max-workers=2 --console=plain`; inspect every exit status and test report.
 - [ ] Install finished debug APKs on siderea_api36 and run affected instrumentation. Review actual screenshots at standard and 320dp widths; restore emulator display size afterwards.
 - [ ] Update docs/version to 1.2.0, commit reviewed implementation, push main/tag under existing release authorization, await release workflow. If runners queue, follow documented manual artifact publication only after local verification.
 - [ ] Download actual published APK/checksum, verify version/certificate, use the app's updater to replace v1.1.2 on the disposable emulator and verify retained photos/session/preferences. Record exact evidence and unverified real-phone/sky limits.

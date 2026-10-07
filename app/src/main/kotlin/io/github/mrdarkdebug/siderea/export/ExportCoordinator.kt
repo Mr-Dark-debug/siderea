@@ -6,6 +6,7 @@ import androidx.core.content.FileProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionHandle
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionStore
+import io.github.mrdarkdebug.siderea.core.capture.session.SkyPreset
 import io.github.mrdarkdebug.siderea.core.export.BitmapTiff
 import io.github.mrdarkdebug.siderea.core.export.ExportException
 import io.github.mrdarkdebug.siderea.core.export.ExportPhase
@@ -255,7 +256,8 @@ class ExportCoordinator
             mode: BulbMode,
         ) {
             val handle = begin(sessionId) ?: return
-            val title = "Long exposure"
+            val title =
+                if (handle.manifest.timelapse?.skyPreset == SkyPreset.MOON) "Moon photo" else "Long exposure"
             val lights = jpegFrames(handle, skipMoved = false)
             val stem = "${handle.dir.name}_${mode.name.lowercase()}"
             enqueue(sessionId, title) {

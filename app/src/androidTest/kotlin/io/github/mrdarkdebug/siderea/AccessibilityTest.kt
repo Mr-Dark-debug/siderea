@@ -7,6 +7,7 @@ import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.accessibility.enableAccessibilityChecks
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
@@ -58,7 +59,7 @@ class AccessibilityTest {
         rule.enableAccessibilityChecks()
         listOf(
             "TIMELAPSE" to "INTERVAL",
-            "ASTRO" to "GAP BETWEEN FRAMES",
+            "ASTRO" to "CAPTURE LENGTH",
             "BULB" to "TOTAL EXPOSURE",
         ).forEach {
             rule.onNodeWithText(it.first).performClick()
@@ -86,5 +87,9 @@ class AccessibilityTest {
         rule.onNode(hasContentDescription("Settings")).performClick()
         rule.waitUntilAtLeastOneExists(hasText("DISPLAY"), 10_000)
         check()
+        rule.onNodeWithText("Updates").performClick()
+        rule.waitUntilAtLeastOneExists(hasText("Automatic updates"), 5_000)
+        check()
+        rule.onNodeWithContentDescription("Back to settings").performClick()
     }
 }

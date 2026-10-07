@@ -10,6 +10,7 @@ enum class SessionKind(
 ) {
     TIMELAPSE("Timelapse", "Timelapse"),
     ASTRO("Astro", "Astro"),
+    ASTRO_TIMELAPSE("AstroTimelapse", "Astro timelapse"),
     LONG_EXPOSURE("LongExposure", "Long exposure"),
 }
 
@@ -48,6 +49,7 @@ data class TimelapseConfig(
     val rampExposure: Boolean = false,
     /** The highest ISO the ramp may use. */
     val rampMaxIso: Int = DEFAULT_RAMP_MAX_ISO,
+    val skyPreset: SkyPreset? = null,
 ) {
     /** Frames the session is expected to produce, or null when it runs until stopped. */
     val plannedFrames: Int?

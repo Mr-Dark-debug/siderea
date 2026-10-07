@@ -12,6 +12,7 @@ import androidx.compose.foundation.gestures.transformable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -66,21 +67,24 @@ fun GalleryViewer(
     repository: GalleryRepository,
     onBack: () -> Unit,
     onOpenSession: (String) -> Unit,
+    onEdit: (GalleryPhoto) -> Unit,
+    onDelete: (GalleryPhoto) -> Unit,
+    busy: Boolean = false,
 ) {
     BackHandler(onBack = onBack)
-    val pager = rememberPagerState(initialPage = initialIndex, pageCount = { photos.size })
-    val photo = photos[pager.currentPage]
+    val pager =
+        rememberPagerState(initialPage = initialIndex.coerceIn(0, photos.lastIndex), pageCount = { photos.size })
+    val photo = photos.getOrNull(pager.currentPage) ?: photos.last()
     val context = LocalContext.current
     var info by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxSize().navigationBarsPadding()) {
         SideriaTopBar(
-            "${pager.currentPage + 1} / ${photos.size}",
+            "${pager.currentPage.coerceAtMost(photos.lastIndex) + 1} / ${photos.size}",
             navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
             navigationDescription = "Back to gallery",
             onNavigationClick = onBack,
             actions = {
                 IconTarget(Icons.Default.Info, "Photo details", { info = true })
-                IconTarget(Icons.Default.Share, "Share photo", { photoIntent(context, photo, share = true) })
             },
         )
         HorizontalPager(pager, modifier = Modifier.weight(1f), key = { photos[it].uri }) { index ->
@@ -92,6 +96,19 @@ fun GalleryViewer(
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.align(Alignment.CenterHorizontally).padding(16.dp),
         )
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            PillButton("Edit", { onEdit(photo) }, enabled = photo.editable && !busy, modifier = Modifier.weight(1f))
+            PillButton(
+                "Share",
+                { photoIntent(context, photo, share = true) },
+                enabled = !busy,
+                modifier = Modifier.weight(1f),
+            )
+            PillButton("Delete", { onDelete(photo) }, enabled = !busy, modifier = Modifier.weight(1f))
+        }
     }
     if (info) {
         val metadata by produceState<Map<String, String>>(emptyMap(), photo.uri) { value = repository.details(photo) }
@@ -192,7 +209,7 @@ private fun ZoomablePhoto(
     }
 }
 
-private fun photoIntent(
+internal fun photoIntent(
     context: Context,
     photo: GalleryPhoto,
     share: Boolean,
@@ -213,5 +230,31 @@ private fun photoIntent(
         context.startActivity(if (share) Intent.createChooser(intent, "Share photo") else intent)
     } catch (_: android.content.ActivityNotFoundException) {
         Toast.makeText(context, "No app can open this image format.", Toast.LENGTH_LONG).show()
+    }
+}
+
+internal fun sharePhotos(
+    context: Context,
+    photos: List<GalleryPhoto>,
+) {
+    if (photos.isEmpty()) return
+    if (photos.size == 1) return photoIntent(context, photos.single(), share = true)
+    val uris = ArrayList(photos.map { Uri.parse(it.uri) })
+    val intent =
+        Intent(Intent.ACTION_SEND_MULTIPLE).apply {
+            type = "image/*"
+            putParcelableArrayListExtra(Intent.EXTRA_STREAM, uris)
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            clipData =
+                android.content.ClipData.newRawUri("Photos", uris.first()).apply {
+                    uris.drop(1).forEach { addItem(android.content.ClipData.Item(it)) }
+                }
+        }
+    try {
+        context.startActivity(Intent.createChooser(intent, "Share photos"))
+    } catch (
+        _: android.content.ActivityNotFoundException,
+    ) {
+        Toast.makeText(context, "No app can share these images.", Toast.LENGTH_LONG).show()
     }
 }

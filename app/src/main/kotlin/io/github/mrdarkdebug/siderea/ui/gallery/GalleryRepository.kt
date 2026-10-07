@@ -15,6 +15,8 @@ import android.util.Size
 import androidx.core.content.FileProvider
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionStore
+import io.github.mrdarkdebug.siderea.export.ExportCoordinator
+import io.github.mrdarkdebug.siderea.export.ExportState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
@@ -29,6 +31,8 @@ class GalleryRepository
     constructor(
         @ApplicationContext private val context: Context,
         private val sessions: SessionStore,
+        private val edits: GalleryEdits,
+        private val exports: ExportCoordinator,
     ) {
         private val thumbnails = LruCache<String, Bitmap>(THUMB_CACHE_COUNT)
 
@@ -128,6 +132,27 @@ class GalleryRepository
                             )
                         }
                     }
+                    handle
+                        .exportsDir()
+                        .listFiles { file -> file.extension.lowercase() in setOf("jpg", "jpeg", "png") }
+                        .orEmpty()
+                        .forEach { file ->
+                            addSessionFile(
+                                file,
+                                summary.id,
+                                summary.createdAtEpochMs,
+                                if (file.extension.lowercase() ==
+                                    "png"
+                                ) {
+                                    "image/png"
+                                } else {
+                                    "image/jpeg"
+                                },
+                                null,
+                                null,
+                                exported = true,
+                            )
+                        }
                 }
             }
 
@@ -138,6 +163,7 @@ class GalleryRepository
             mime: String,
             exposure: Long?,
             iso: Int?,
+            exported: Boolean = false,
         ) {
             if (!file.isFile) return
             val uri = FileProvider.getUriForFile(context, "${context.packageName}.reports", file)
@@ -151,9 +177,63 @@ class GalleryRepository
                     sessionId = sessionId,
                     exposureNs = exposure,
                     iso = iso,
+                    sessionExport = exported,
                 ),
             )
         }
+
+        suspend fun saveCopy(
+            photo: GalleryPhoto,
+            edit: PhotoEdit,
+        ): GalleryPhoto {
+            val current = list().firstOrNull { it.uri == photo.uri } ?: error("This photo is no longer available.")
+            return edits.saveCopy(current, edit)
+        }
+
+        /** Revalidate every target against the library, never accept arbitrary provider or file paths. */
+        suspend fun delete(photo: GalleryPhoto) =
+            withContext(Dispatchers.IO) {
+                val current = list().firstOrNull { it.uri == photo.uri } ?: error("This photo is no longer available.")
+                val id = current.sessionId
+                if (id != null) {
+                    val working = exports.state.value as? ExportState.Working
+                    check(working?.sessionId != id) { "Wait for this session's export to finish." }
+                    val handle = sessions.open(id) ?: error("This session is no longer available.")
+                    check(
+                        handle.manifest.status !=
+                            io.github.mrdarkdebug.siderea.core.capture.session.SessionStatus.RUNNING,
+                    ) {
+                        "Stop or finalise this session before deleting its photos."
+                    }
+                    if (current.sessionExport) {
+                        val file = File(handle.exportsDir(), current.name)
+                        require(file.canonicalFile.parentFile == handle.exportsDir().canonicalFile)
+                        check(file.isFile && file.delete()) { "Couldn't delete the processed photo." }
+                    } else {
+                        handle.removeMedia(
+                            current.name.substringBeforeLast('.'),
+                            raw =
+                                current.mime == "image/x-adobe-dng",
+                        )
+                    }
+                } else {
+                    val uri = Uri.parse(current.uri)
+                    val selection =
+                        "${MediaStore.Images.Media.OWNER_PACKAGE_NAME} = ? AND " +
+                            "${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?"
+                    check(
+                        context.contentResolver.delete(
+                            uri,
+                            selection,
+                            arrayOf(context.packageName, "Pictures/Siderea/%"),
+                        ) ==
+                            1,
+                    ) {
+                        "Couldn't delete this photo."
+                    }
+                }
+                thumbnails.remove(current.uri)
+            }
 
         suspend fun image(
             photo: GalleryPhoto,
@@ -170,6 +250,7 @@ class GalleryRepository
                             ImageDecoder.decodeBitmap(
                                 ImageDecoder.createSource(context.contentResolver, uri),
                             ) { decoder, info, _ ->
+                                decoder.allocator = ImageDecoder.ALLOCATOR_SOFTWARE
                                 val edge = if (full) FULL_SIZE else THUMB_SIZE
                                 val sample =
                                     (

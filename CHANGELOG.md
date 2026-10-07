@@ -4,6 +4,40 @@ All notable changes are recorded here. Each milestone lists **what works**, **wh
 real device**, and **known issues**. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.2.0] - 2026-10-07
+
+### Added and changed
+- Built-in photo editor: crop/aspect, drag crop position, zoom, rotate, mirror, brightness, contrast,
+  saturation and warmth. Save copy keeps the original and capture date, writes a JPEG up to 8 MP,
+  and preserves photographic EXIF where available.
+- Gallery single/batch deletion with confirmation, multi-selection and sharing. Source-frame deletion
+  updates the session journal without deleting a paired JPEG/RAW file. Capturing/exporting sessions are protected.
+  Processed session JPEG/PNG results now appear alongside source photos.
+- Simple Astro presets: Night sky, Milky Way, Star trails and Moon; actual exposure/ISO/focus summaries,
+  lens-aware limits, short tripod guidance and a cancelable five-second start delay. Advanced controls
+  retain frame spacing, manual exposure/focus and screen behavior. Recorded presets recommend stack/trail processing;
+  Moon sessions offer averaging without star detection.
+- Timelapse now offers Normal and Astro. Astro records locked long-exposure JPEG frames, calculates
+  capture cadence from exposure and save overhead, supports recording durations/until stopped, and exports
+  a video through the existing session workflow.
+- Concise settings groups, confirmed reset, and a dedicated Updates page with installed version,
+  download progress, verification status, last successful check, automatic Wi-Fi downloads and release notes.
+
+### Limits and upgrade notes
+- Presets are starting points and may need adjustment to sky brightness and lens capabilities.
+  Pixel Camera's proprietary Night Sight algorithms are not included. Video is created from the session
+  after recording; sky photo stacking remains a separate processing action.
+- RAW files can be shared/deleted; edit their JPEG pair. Editing does not overwrite full-resolution originals.
+- Same persistent signing key as v1.1.2: in-place upgrades preserve data. Older v1.0.0/initial v1.1.0
+  signing-key migration still needs the one-time reinstall described in [UPDATES.md](docs/UPDATES.md).
+- Real-phone, real-night-sky image quality and OEM installer testing remain outstanding.
+
+### Verified
+- 319 host tests, quality checks, Android lint and optimized APK build pass. All 41 focused emulator checks pass
+  across the final camera and gallery runs, including Moon averaging and astro timelapse video export.
+  Gallery/editor and accessibility checks also pass at 320 dp width.
+- See [the validation report](docs/VALIDATION-1.2.md) for the published APK and in-place upgrade evidence.
+
 ## [1.1.2] - 2026-10-05
 
 ### Fixed

@@ -10,46 +10,50 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.BurstMode
+import androidx.compose.material.icons.filled.Code
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.PhotoLibrary
+import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.SystemUpdate
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.mrdarkdebug.siderea.R
-import io.github.mrdarkdebug.siderea.core.ui.components.KeyValueRow
-import io.github.mrdarkdebug.siderea.core.ui.components.PillButton
-import io.github.mrdarkdebug.siderea.core.ui.components.PillStyle
 import io.github.mrdarkdebug.siderea.core.ui.components.SectionLabel
 import io.github.mrdarkdebug.siderea.core.ui.components.SideriaCard
 import io.github.mrdarkdebug.siderea.core.ui.components.SideriaTopBar
 import io.github.mrdarkdebug.siderea.core.ui.theme.Siderea
-import io.github.mrdarkdebug.siderea.core.ui.theme.SideriaDimens
-import io.github.mrdarkdebug.siderea.core.ui.theme.SideriaSpacing
-import io.github.mrdarkdebug.siderea.update.UpdateSettings
 import io.github.mrdarkdebug.siderea.update.UpdateViewModel
-
-private const val REPO_URL = "https://github.com/Mr-Dark-debug/siderea"
+import io.github.mrdarkdebug.siderea.update.UpdatesScreen
 
 @Composable
 fun SettingsScreen(
@@ -62,133 +66,146 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val settings by viewModel.settings.collectAsStateWithLifecycle()
+    val updateState by updates.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
-    val version = remember(context) { appVersionLabel(context) }
-    val linkFailed = stringResource(R.string.settings_open_link_failed)
-    val nav = WindowInsets.navigationBars.asPaddingValues()
-
-    Column(Modifier.fillMaxSize()) {
+    val version =
+        remember(context) {
+            context.packageManager
+                .getPackageInfo(context.packageName, 0)
+                .versionName
+                .orEmpty()
+        }
+    var showUpdates by rememberSaveable { mutableStateOf(false) }
+    var reset by remember { mutableStateOf(false) }
+    if (showUpdates) {
+        UpdatesScreen(updates) { showUpdates = false }
+        return
+    }
+    Column(Modifier.fillMaxSize().navigationBarsPadding()) {
         SideriaTopBar(
-            title = stringResource(R.string.settings_title),
+            stringResource(R.string.settings_title),
             navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
             navigationDescription = stringResource(R.string.action_back),
             onNavigationClick = onBack,
         )
         LazyColumn(
-            modifier = Modifier.weight(1f),
-            contentPadding =
-                PaddingValues(
-                    start = SideriaSpacing.gutter,
-                    end = SideriaSpacing.gutter,
-                    bottom = nav.calculateBottomPadding() + SideriaSpacing.xl,
-                ),
-            verticalArrangement = Arrangement.spacedBy(SideriaSpacing.xs),
+            Modifier.weight(1f),
+            contentPadding = PaddingValues(horizontal = 20.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            item { SectionLabel(stringResource(R.string.settings_display)) }
+            item {
+                SideriaCard {
+                    SettingsLink(
+                        Icons.Default.SystemUpdate,
+                        "Updates",
+                        when {
+                            updateState.readyVersion != null -> "${updateState.readyVersion} ready to install"
+                            updateState.progress != null -> "Downloading ${(updateState.progress!! * 100).toInt()}%"
+                            else -> "Siderea $version"
+                        },
+                    ) { showUpdates = true }
+                }
+            }
+            item { SectionLabel("Display") }
             item {
                 SideriaCard {
                     SwitchRow(
-                        title = stringResource(R.string.settings_red_mode),
-                        hint = stringResource(R.string.settings_red_mode_hint),
-                        checked = settings.redMode,
-                        onCheckedChange = viewModel::setRedMode,
+                        stringResource(R.string.settings_red_mode),
+                        "Gentle on your eyes at night",
+                        settings.redMode,
+                        viewModel::setRedMode,
                     )
                     SwitchRow(
-                        title = stringResource(R.string.settings_haptics),
-                        hint = stringResource(R.string.settings_haptics_hint),
-                        checked = settings.hapticsEnabled,
-                        onCheckedChange = viewModel::setHapticsEnabled,
+                        stringResource(R.string.settings_haptics),
+                        "Feedback when you tap controls",
+                        settings.hapticsEnabled,
+                        viewModel::setHapticsEnabled,
                     )
                 }
             }
-            item { SectionLabel(stringResource(R.string.settings_tools)) }
+            item { SectionLabel("Library") }
             item {
-                SideriaCard(onClick = onOpenGallery) {
-                    Text("Gallery", style = androidx.compose.material3.MaterialTheme.typography.titleMedium)
-                    Text("Photos, dates & details", color = Siderea.palette.onSurfaceMuted)
-                }
-            }
-            item {
-                SideriaCard(onClick = onOpenSessions) {
-                    Text(
+                SideriaCard {
+                    SettingsLink(Icons.Default.PhotoLibrary, "Gallery", "Browse, edit & share", onOpenGallery)
+                    SettingsLink(
+                        Icons.Default.BurstMode,
                         stringResource(R.string.settings_sessions),
-                        style = Siderea.text.readout,
-                        color = Siderea.palette.onBackground,
-                    )
-                    Text(
-                        stringResource(R.string.settings_sessions_hint),
-                        style = Siderea.text.readoutSmall,
-                        color = Siderea.palette.onSurfaceMuted,
+                        "Capture sessions & exports",
+                        onOpenSessions,
                     )
                 }
             }
-            item {
-                SideriaCard(onClick = onOpenInspector) {
-                    Text(
-                        stringResource(R.string.settings_open_inspector),
-                        style = Siderea.text.readout,
-                        color = Siderea.palette.onBackground,
-                    )
-                    Text(
-                        stringResource(R.string.settings_open_inspector_hint),
-                        style = Siderea.text.readoutSmall,
-                        color = Siderea.palette.onSurfaceMuted,
-                    )
-                }
-            }
-            item { SectionLabel(stringResource(R.string.settings_data)) }
+            item { SectionLabel("App") }
             item {
                 SideriaCard {
-                    Text(
-                        stringResource(R.string.settings_reset_hint),
-                        style = Siderea.text.readoutSmall,
-                        color = Siderea.palette.onSurfaceMuted,
+                    SettingsLink(
+                        Icons.Default.Info,
+                        "Capability Inspector",
+                        "What your lenses support",
+                        onOpenInspector,
                     )
-                    Spacer(Modifier.height(SideriaSpacing.md))
-                    PillButton(
-                        text = stringResource(R.string.settings_reset),
-                        onClick = viewModel::reset,
-                        style = PillStyle.Outlined,
-                    )
+                    SettingsLink(
+                        Icons.Default.RestartAlt,
+                        stringResource(R.string.settings_reset),
+                        null,
+                    ) { reset = true }
+                    SettingsLink(Icons.Default.Code, "Open-source licenses", null, onOpenLicenses)
+                    SettingsLink(Icons.Default.Code, "Source on GitHub", null) { openLink(context, REPO_URL) }
                 }
             }
-            item { SectionLabel(stringResource(R.string.settings_about)) }
-            item { SideriaCard { UpdateSettings(updates) } }
             item {
-                SideriaCard {
-                    KeyValueRow(stringResource(R.string.settings_version), version)
-                    KeyValueRow(
-                        stringResource(R.string.settings_license),
-                        stringResource(R.string.settings_license_value),
-                    )
-                    Row(
-                        modifier =
-                            Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = SideriaDimens.touchTargetMin)
-                                .clickable(role = Role.Button) { openLink(context, REPO_URL, linkFailed) },
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        KeyValueRow(
-                            stringResource(R.string.settings_source),
-                            stringResource(R.string.settings_source_value),
-                            valueHighlighted = true,
-                        )
-                    }
-                    Spacer(Modifier.height(SideriaSpacing.sm))
-                    PillButton(
-                        text = stringResource(R.string.settings_licenses),
-                        onClick = onOpenLicenses,
-                        style = PillStyle.Subtle,
-                        modifier = Modifier.fillMaxWidth(),
-                    )
-                }
+                Text(
+                    "Siderea $version · Apache 2.0",
+                    style = Siderea.text.caption,
+                    color = Siderea.palette.onSurfaceMuted,
+                    modifier = Modifier.padding(vertical = 16.dp),
+                )
             }
         }
     }
+    if (reset) {
+        AlertDialog(
+            onDismissRequest = { reset = false },
+            title = { Text("Reset settings?") },
+            text = { Text("Restore camera and display defaults. Your photos and sessions are kept.") },
+            confirmButton = {
+                TextButton(onClick = {
+                    viewModel.reset()
+                    reset = false
+                }) { Text("Reset") }
+            },
+            dismissButton = { TextButton(onClick = { reset = false }) { Text("Cancel") } },
+            containerColor = Siderea.palette.surface,
+        )
+    }
 }
 
-/** A full-width toggle row. The whole row is the 56dp target, not just the switch. */
+@Composable
+private fun SettingsLink(
+    icon: ImageVector,
+    title: String,
+    hint: String?,
+    onClick: () -> Unit,
+) {
+    Row(
+        Modifier
+            .fillMaxWidth()
+            .heightIn(
+                min = 56.dp,
+            ).clickable(role = Role.Button, onClick = onClick)
+            .padding(vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Icon(icon, null, tint = Siderea.palette.accent)
+        Column(Modifier.weight(1f)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, color = Siderea.palette.onBackground)
+            hint?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = Siderea.palette.onSurfaceMuted) }
+        }
+        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = Siderea.palette.onSurfaceMuted)
+    }
+}
+
 @Composable
 private fun SwitchRow(
     title: String,
@@ -196,53 +213,37 @@ private fun SwitchRow(
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
 ) {
-    val palette = Siderea.palette
     val haptics = Siderea.haptics
     Row(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .heightIn(min = SideriaDimens.touchTarget)
-                .toggleable(value = checked, role = Role.Switch) {
-                    haptics.toggle(it)
-                    onCheckedChange(it)
-                }.padding(vertical = SideriaSpacing.sm),
+        Modifier
+            .fillMaxWidth()
+            .heightIn(min = 56.dp)
+            .toggleable(checked, role = Role.Switch) {
+                haptics.toggle(it)
+                onCheckedChange(it)
+            }.padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(SideriaSpacing.lg),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Column(Modifier.weight(1f)) {
-            Text(title, style = Siderea.text.readout, color = palette.onBackground)
-            Text(hint, style = Siderea.text.readoutSmall, color = palette.onSurfaceMuted)
+            Text(title, style = MaterialTheme.typography.titleMedium, color = Siderea.palette.onBackground)
+            Text(hint, style = MaterialTheme.typography.bodySmall, color = Siderea.palette.onSurfaceMuted)
         }
-        // The Row owns the click; the Switch is a passive indicator.
-        Switch(
-            checked = checked,
-            onCheckedChange = null,
-            colors =
-                SwitchDefaults.colors(
-                    checkedThumbColor = palette.onAccent,
-                    checkedTrackColor = palette.accent,
-                    uncheckedThumbColor = palette.onSurfaceMuted,
-                    uncheckedTrackColor = palette.surfaceRaised,
-                    uncheckedBorderColor = palette.onSurfaceMuted,
-                ),
-        )
+        Switch(checked, onCheckedChange = null)
     }
-}
-
-private fun appVersionLabel(context: Context): String {
-    val info = runCatching { context.packageManager.getPackageInfo(context.packageName, 0) }.getOrNull()
-    return "${info?.versionName ?: "unknown"} (${info?.longVersionCode ?: 0})"
 }
 
 private fun openLink(
     context: Context,
     url: String,
-    failureMessage: String,
 ) {
     try {
-        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-    } catch (_: ActivityNotFoundException) {
-        Toast.makeText(context, failureMessage, Toast.LENGTH_LONG).show()
+        context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
+    } catch (
+        _: ActivityNotFoundException,
+    ) {
+        Toast.makeText(context, "Install a browser to open this link.", Toast.LENGTH_LONG).show()
     }
 }
+
+private const val REPO_URL = "https://github.com/Mr-Dark-debug/siderea"

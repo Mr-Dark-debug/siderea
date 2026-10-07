@@ -396,6 +396,8 @@ class CameraViewModel
         }
 
         fun selectMode(mode: CameraMode) {
+            if (mutableState.value.isCapturing || mutableState.value.run is RunState.Running) return
+            val changingMode = mutableState.value.mode != mode
             if (mode.availableSince != null) {
                 showMessage(
                     "${mode.label.lowercase().replaceFirstChar {
@@ -413,7 +415,63 @@ class CameraViewModel
                 }
             mutableState.update { it.copy(mode = mode, panel = panel) }
             if (panel != null) refreshOverhead()
-            if (mode == CameraMode.ASTRO || mode == CameraMode.LONG_EXPOSURE) preferLongExposure(mode)
+            if (changingMode && SkyCapturePolicy.usesSky(mutableState.value)) {
+                setSkyPreset(mutableState.value.timelapse.skyPreset)
+            } else if (mode == CameraMode.LONG_EXPOSURE) {
+                preferLongExposure(mode)
+            }
+        }
+
+        fun setSkyPreset(preset: io.github.mrdarkdebug.siderea.core.capture.session.SkyPreset) {
+            val s = mutableState.value
+            if (s.mode == CameraMode.TIMELAPSE && s.timelapse.astroTimelapse &&
+                preset != io.github.mrdarkdebug.siderea.core.capture.session.SkyPreset.NIGHT_SKY &&
+                preset != io.github.mrdarkdebug.siderea.core.capture.session.SkyPreset.MILKY_WAY
+            ) {
+                setSkyPreset(io.github.mrdarkdebug.siderea.core.capture.session.SkyPreset.NIGHT_SKY)
+                return
+            }
+            val limits = s.limits ?: return
+            val focal =
+                s.lens
+                    ?.info
+                    ?.lens
+                    ?.equivalentFocalLengthsMm
+                    ?.firstOrNull()
+            update { SkyCapturePolicy.settings(preset, it, limits, focal) }
+            setTimelapse {
+                if (s.mode == CameraMode.TIMELAPSE) return@setTimelapse it.copy(skyPreset = preset)
+                it.copy(
+                    skyPreset = preset,
+                    frameCount = preset.frames,
+                    stop =
+                        if (preset ==
+                            io.github.mrdarkdebug.siderea.core.capture.session.SkyPreset.STAR_TRAILS
+                        ) {
+                            StopCondition.DURATION
+                        } else {
+                            StopCondition.FRAME_COUNT
+                        },
+                    durationMs =
+                        if (preset ==
+                            io.github.mrdarkdebug.siderea.core.capture.session.SkyPreset.STAR_TRAILS
+                        ) {
+                            1_800_000L
+                        } else {
+                            it.durationMs
+                        },
+                )
+            }
+        }
+
+        fun setAstroTimelapse(enabled: Boolean) {
+            if (mutableState.value.timelapse.astroTimelapse == enabled) return
+            setTimelapse { it.copy(astroTimelapse = enabled) }
+            if (enabled) {
+                setSkyPreset(mutableState.value.timelapse.skyPreset)
+            } else {
+                update { it.copy(exposureMode = ExposureMode.AUTO, focusMode = FocusMode.AUTO) }
+            }
         }
 
         /**
@@ -727,6 +785,10 @@ class CameraViewModel
 
         fun openPreflight() {
             val s = mutableState.value
+            if (SkyCapturePolicy.usesSky(s) && s.limits?.manualExposure != true) {
+                showMessage("This lens can't take manual sky exposures. Choose a supported rear lens.")
+                return
+            }
             val megapixels =
                 s.ready?.let { r ->
                     val size = r.rawSize ?: r.jpegSize
@@ -760,41 +822,30 @@ class CameraViewModel
                     shutterNs = s.effectiveShutterNs,
                     iso = s.effectiveIso,
                     orientation = orientation,
-                    kind =
-                        when (s.mode) {
-                            CameraMode.ASTRO -> SessionKind.ASTRO
-                            CameraMode.LONG_EXPOSURE -> SessionKind.LONG_EXPOSURE
-                            else -> SessionKind.TIMELAPSE
-                        },
+                    kind = SkyCapturePolicy.kind(s),
                 )
             mutableState.update { it.copy(preflight = null, panel = null) }
-            timelapse.start(request)
+            val delaySeconds = if (SkyCapturePolicy.usesSky(s)) s.timelapse.skyDelaySeconds else s.timerSeconds
+            captureJob =
+                viewModelScope.launch {
+                    try {
+                        for (left in delaySeconds downTo 1) {
+                            mutableState.update { it.copy(capture = CaptureUi.Countdown(left)) }
+                            delay(ONE_SECOND_MS)
+                        }
+                        mutableState.update { it.copy(capture = CaptureUi.Idle) }
+                        timelapse.start(request)
+                    } catch (_: CancellationException) {
+                        mutableState.update { it.copy(capture = CaptureUi.Idle) }
+                    }
+                }
         }
 
         /**
          * What a run will really use. Astro frames are long exposures taken back to back, so the interval is the
          * exposure plus a short gap, and the exposure is always locked.
          */
-        private fun setupFor(s: CameraUiState): TimelapseSetup =
-            if (s.mode == CameraMode.LONG_EXPOSURE) {
-                val seconds = s.timelapse.bulbSeconds
-                s.timelapse.copy(
-                    intervalMs = astroIntervalMs(s.effectiveShutterNs, 0L, s.overhead),
-                    stop = if (seconds == null) StopCondition.UNTIL_STOPPED else StopCondition.FRAME_COUNT,
-                    frameCount = seconds?.let { bulbFrames(it, s.effectiveShutterNs) } ?: s.timelapse.frameCount,
-                    lockExposure = true,
-                    customInterval = true,
-                )
-            } else if (s.mode == CameraMode.ASTRO) {
-                s.timelapse.copy(
-                    intervalMs =
-                        astroIntervalMs(s.effectiveShutterNs, s.timelapse.astroGapMs, s.overhead),
-                    lockExposure = true,
-                    customInterval = true,
-                )
-            } else {
-                s.timelapse
-            }
+        private fun setupFor(s: CameraUiState): TimelapseSetup = SkyCapturePolicy.setup(s)
 
         fun stopTimelapse() = timelapse.stop()
 

@@ -9,6 +9,7 @@ import io.github.mrdarkdebug.siderea.core.camera.engine.FrameInfo
 import io.github.mrdarkdebug.siderea.core.camera.engine.Lens
 import io.github.mrdarkdebug.siderea.core.camera.engine.ReadyInfo
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionSummary
+import io.github.mrdarkdebug.siderea.core.capture.session.SkyPreset
 import io.github.mrdarkdebug.siderea.core.capture.session.StopCondition
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.OverheadEstimate
 import io.github.mrdarkdebug.siderea.core.capture.timelapse.PreflightItem
@@ -68,6 +69,12 @@ data class TimelapseSetup(
     val rampExposure: Boolean = false,
     /** Virtual bulb: total exposure in seconds, or null to keep going until stopped. */
     val bulbSeconds: Int? = 120,
+    val skyPreset: SkyPreset = SkyPreset.NIGHT_SKY,
+    val skyDelaySeconds: Int = 5,
+    val astroTimelapse: Boolean = false,
+    val astroDurationMs: Long = 600_000,
+    val astroUntilStopped: Boolean = false,
+    val astroFps: Int = 24,
 )
 
 sealed interface CaptureUi {

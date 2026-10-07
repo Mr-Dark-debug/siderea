@@ -34,6 +34,7 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 | ✅ | **M5** Virtual Bulb long exposure | v0.6.0 | done, emulator-verified |
 | ✅ | **M6** Exposure ramp, polish, accessibility | v1.0.0 | done, emulator-verified |
 | ✅ | **M7** Simpler camera, calendar gallery, GitHub updates | v1.1.2 | emulator-verified; see validation report |
+| ✅ | **M8** Gallery editor/management, sky presets, astro timelapse | v1.2.0 | see [validation report](docs/VALIDATION-1.2.md) |
 
 > **Honest caveat.** Everything camera-related has been run on Android *emulators* and checked against a real
 > Pixel 10 *capability report*, but not yet on the phone itself. The first people to run it on hardware will
@@ -63,14 +64,24 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 <sub>Captured on Android emulators. The first six show the v1.1.2 release and update flow using the emulator's moving test pattern;
 the remaining screenshots document earlier capture features. Real-device screenshots will replace these.</sub>
 
-## What it does today (v1.1.2)
+## What it does today (v1.2.0)
 
 - **Simpler camera:** Auto and Pro, a larger viewfinder, compact lens selectors and a Tools sheet for
   format, aspect and shooting aids. The shutter and built-in gallery stay one tap away.
 - **Built-in gallery:** photos and private session frames grouped by date, a month calendar with capture
-  markers, a swipeable/zoomable viewer, real file/capture details and sharing. No broad photo-library permission.
+  markers, a swipeable/zoomable viewer, real file/capture details, multi-selection and sharing. Confirmed
+  single/batch deletion protects active sessions and keeps paired RAW/JPEG files independent. Processed
+  session photos are included. No broad photo-library permission.
+- **Photo editor:** crop/aspect, reposition/zoom, rotate/mirror, brightness, contrast, saturation and warmth.
+  Save copy retains the original, capture date and photographic EXIF; new JPEGs go to `Pictures/Siderea/Edits`
+  at up to 8 MP. Edit the JPEG pair of a RAW image.
+- **Sky presets:** Night sky, Milky Way, Star trails and Moon apply sensible exposure/ISO/far-focus starting
+  points within the lens's reported limits. Advanced controls stay available. A five-second delay gives you
+  time to settle the phone on a tripod. Choose **Timelapse → Astro** for locked long-exposure frames, then
+  **Open session → Make video** after recording. Google Pixel's night-camera interaction informed these
+  controls; Siderea uses its own capture and processing pipeline.
 - **GitHub updates:** automatic stable-release checks, unmetered downloads, verified APKs and Android-approved
-  installation. See [update and migration notes](docs/UPDATES.md).
+  installation, with a dedicated **Settings → Updates** page. See [update and migration notes](docs/UPDATES.md).
 
 - **Manual photo mode** on Camera2: shutter, ISO, focus, white balance (presets or Kelvin + tint) and exposure
   compensation, each with Auto / Manual. Shutter and ISO combine into P / S / I / M behaviour.
@@ -88,7 +99,7 @@ the remaining screenshots document earlier capture features. Real-device screens
   **Exposure ramp** for sunsets and sunrises: shutter first, then ISO, a quarter of a stop per frame at most,
   steered by the brightness of each frame it just took.
 - **Astro mode**: back-to-back long exposures (interval = exposure + a short gap, never faster than the phone can
-  save a frame), with a "500 rule" hint for the lens. Afterwards from the session screen: **star trails**,
+  save a frame); point-star presets also respect the approximate "500 rule". Afterwards from the session screen: **star trails**,
   **comet trails** and an **aligned stack** (stars are detected, matched against a reference frame, and the frames
   are warped onto it and averaged; frames that cannot be matched are left out and listed), plus **dark frames**
   taken with the lens covered and subtracted. Results are a JPEG and a TIFF (16-bit for stacks).

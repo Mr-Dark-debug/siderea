@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionKind
+import io.github.mrdarkdebug.siderea.core.capture.session.SkyPreset
 import io.github.mrdarkdebug.siderea.core.processing.BulbMode
 import io.github.mrdarkdebug.siderea.core.ui.components.ChipButton
 import io.github.mrdarkdebug.siderea.core.ui.components.PillButton
@@ -49,10 +50,21 @@ internal fun AstroSection(
 ) {
     val busy = state is ExportState.Working
     val bulb = detail.manifest.kind == SessionKind.LONG_EXPOSURE
+    val moon = detail.manifest.timelapse?.skyPreset == SkyPreset.MOON
     Column(verticalArrangement = Arrangement.spacedBy(SideriaSpacing.sm)) {
-        SectionLabel(if (bulb) "Long exposure" else "Sky")
+        SectionLabel(
+            if (moon) {
+                "Moon"
+            } else if (bulb) {
+                "Long exposure"
+            } else {
+                "Sky"
+            },
+        )
         Text(
-            if (bulb) {
+            if (moon) {
+                "Average the moon frames to reduce noise. Keep the phone on a tripod."
+            } else if (bulb) {
                 "Adds the frames together like one long exposure, keeps the brightest light, or averages them."
             } else {
                 "Star trails, or an aligned stack that averages the noise away. " +
@@ -63,13 +75,19 @@ internal fun AstroSection(
         )
         Row(horizontalArrangement = Arrangement.spacedBy(SideriaSpacing.sm)) {
             PillButton(
-                if (bulb) "Combine frames" else "Trails / stack",
+                if (moon) {
+                    "Create moon photo"
+                } else if (bulb) {
+                    "Combine frames"
+                } else {
+                    "Trails / stack"
+                },
                 onProcess,
                 style = PillStyle.Filled,
                 enabled = !busy,
                 modifier = Modifier.weight(1f),
             )
-            if (!bulb) {
+            if (!bulb && !moon) {
                 PillButton(
                     if (detail.darkFrames > 0) "Darks (${detail.darkFrames})" else "Take darks",
                     onDarks,
@@ -77,6 +95,26 @@ internal fun AstroSection(
                     modifier = Modifier.weight(1f),
                 )
             }
+        }
+    }
+}
+
+@Composable
+internal fun MoonDialog(
+    detail: SessionDetail,
+    onDismiss: () -> Unit,
+    onStart: () -> Unit,
+) {
+    Sheet(onDismiss) {
+        Text("MOON PHOTO", style = Siderea.text.caption, color = Siderea.palette.onSurfaceMuted)
+        Text(
+            "Average ${detail.jpegFrames} frames without star alignment. Saves a JPEG and TIFF.",
+            style = Siderea.text.readoutSmall,
+            color = Siderea.palette.onBackground,
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(SideriaSpacing.sm)) {
+            PillButton("Cancel", onDismiss, modifier = Modifier.weight(1f))
+            PillButton("Start", onStart, style = PillStyle.Filled, modifier = Modifier.weight(1f))
         }
     }
 }
@@ -120,7 +158,17 @@ internal fun AstroDialog(
     onDismiss: () -> Unit,
     onStart: (AstroMode, Boolean, Boolean) -> Unit,
 ) {
-    var mode by remember { mutableStateOf(AstroMode.TRAILS) }
+    var mode by remember {
+        mutableStateOf(
+            if (detail.manifest.timelapse?.skyPreset ==
+                io.github.mrdarkdebug.siderea.core.capture.session.SkyPreset.STAR_TRAILS
+            ) {
+                AstroMode.TRAILS
+            } else {
+                AstroMode.STACK
+            },
+        )
+    }
     var darks by remember { mutableStateOf(detail.darkFrames > 0) }
     var brighten by remember { mutableStateOf(true) }
     Sheet(onDismiss) {

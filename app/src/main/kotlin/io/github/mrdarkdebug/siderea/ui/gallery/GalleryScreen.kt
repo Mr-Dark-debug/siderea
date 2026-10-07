@@ -1,9 +1,11 @@
 package io.github.mrdarkdebug.siderea.ui.gallery
 
 import android.graphics.Bitmap
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -29,13 +31,20 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Checklist
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Share
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -48,6 +57,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.selected
@@ -80,114 +90,232 @@ fun GalleryScreen(
     var monthString by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
     var viewing by remember { mutableStateOf<List<GalleryPhoto>?>(null) }
     var initialIndex by remember { mutableIntStateOf(0) }
+    var editing by remember { mutableStateOf<GalleryPhoto?>(null) }
+    var selecting by remember { mutableStateOf(false) }
+    var selected by remember { mutableStateOf<Set<String>>(emptySet()) }
+    var deleting by remember { mutableStateOf<List<GalleryPhoto>?>(null) }
+    val context = LocalContext.current
     val days = remember(state.photos) { galleryDays(state.photos) }
     val day = dayString?.let(LocalDate::parse)
     val visible = remember(state.photos, day) { state.photos.filter { day == null || it.date() == day } }
+    val selectedPhotos = state.photos.filter { it.uri in selected }
+    BackHandler(enabled = selecting) {
+        selecting = false
+        selected = emptySet()
+    }
     LifecycleResumeEffect(Unit) {
         viewModel.refresh()
         onPauseOrDispose {}
     }
 
-    if (viewing != null) {
+    if (editing != null) {
+        GalleryEditor(editing!!, viewModel.repository, onBack = { editing = null }, onSaved = {
+            editing = null
+            viewing = null
+            viewModel.refresh()
+        })
+        return
+    }
+    val currentViewing = viewing?.mapNotNull { old -> state.photos.firstOrNull { it.uri == old.uri } }
+    LaunchedEffect(currentViewing) {
+        if (currentViewing?.isEmpty() == true) viewing = null
+    }
+    if (!currentViewing.isNullOrEmpty()) {
         GalleryViewer(
-            viewing.orEmpty(),
+            currentViewing,
             initialIndex,
             viewModel.repository,
             onBack = { viewing = null },
             onOpenSession = onOpenSession,
+            onEdit = { editing = it },
+            onDelete = { deleting = listOf(it) },
+            busy = state.busy,
         )
-        return
-    }
-    Column(Modifier.fillMaxSize().navigationBarsPadding()) {
-        SideriaTopBar(
-            "Gallery",
-            navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
-            navigationDescription = "Back to camera",
-            onNavigationClick = onBack,
-            actions = {
-                IconTarget(Icons.Default.Refresh, "Refresh gallery", viewModel::refresh)
-                IconTarget(Icons.Default.CalendarMonth, "Show calendar", { calendar = !calendar })
-            },
-        )
-        Row(
-            Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text(
-                    if (day == null) "Your moments" else day.format(DAY_FORMAT),
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = Siderea.palette.onBackground,
-                )
-                Text(
-                    "${visible.size} images",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Siderea.palette.onSurfaceMuted,
-                )
-            }
-            if (day != null) ChipButton("All dates", { dayString = null })
-        }
-        if (calendar) {
-            GalleryCalendar(
-                YearMonth.parse(monthString),
-                days.keys,
-                day,
-                onMonth = { monthString = it.toString() },
-                onDate = { dayString = it.toString() },
-            )
-        }
-        when {
-            state.error != null -> {
-                GalleryMessage(state.error.orEmpty(), "Try again", viewModel::refresh)
-            }
-
-            state.loading && state.photos.isEmpty() -> {
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(color = Siderea.palette.accent)
-                }
-            }
-
-            visible.isEmpty() -> {
-                GalleryMessage(
-                    if (day == null) "Your photos will appear here" else "No photos on this date",
-                    if (day == null) "Take a photo" else "Show all photos",
-                    if (day == null) {
-                        onBack
+    } else {
+        Column(Modifier.fillMaxSize().navigationBarsPadding()) {
+            SideriaTopBar(
+                if (selecting) "${selectedPhotos.size} selected" else "Gallery",
+                navigationIcon = Icons.AutoMirrored.Filled.ArrowBack,
+                navigationDescription = "Back to camera",
+                onNavigationClick = {
+                    if (selecting) {
+                        selecting = false
+                        selected = emptySet()
                     } else {
-                        { dayString = null }
-                    },
+                        onBack()
+                    }
+                },
+                actions = {
+                    if (selecting) {
+                        IconTarget(Icons.Default.Checklist, "Select all visible photos", {
+                            selected =
+                                visible.map { it.uri }.toSet()
+                        })
+                        IconTarget(
+                            Icons.Default.Share,
+                            "Share selected photos",
+                            { sharePhotos(context, selectedPhotos) },
+                        )
+                        IconTarget(Icons.Default.Delete, "Delete selected photos", {
+                            if (!state.busy &&
+                                selectedPhotos.isNotEmpty()
+                            ) {
+                                deleting = selectedPhotos
+                            }
+                        })
+                    } else {
+                        IconTarget(Icons.Default.Checklist, "Select photos", { selecting = true })
+                        IconTarget(
+                            Icons.Default.CalendarMonth,
+                            if (calendar) "Hide calendar" else "Show calendar",
+                            { calendar = !calendar },
+                        )
+                    }
+                },
+            )
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(
+                        if (day == null) "Your moments" else day.format(DAY_FORMAT),
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = Siderea.palette.onBackground,
+                    )
+                    Text(
+                        "${visible.size} images",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = Siderea.palette.onSurfaceMuted,
+                    )
+                }
+                if (day != null) ChipButton("All dates", { dayString = null })
+            }
+            if (calendar) {
+                GalleryCalendar(
+                    YearMonth.parse(monthString),
+                    days.keys,
+                    day,
+                    onMonth = { monthString = it.toString() },
+                    onDate = { dayString = it.toString() },
                 )
             }
+            when {
+                state.error != null -> {
+                    GalleryMessage(state.error.orEmpty(), "Try again", viewModel::refresh)
+                }
 
-            else -> {
-                LazyVerticalGrid(
-                    GridCells.Adaptive(100.dp),
-                    modifier = Modifier.weight(1f),
-                    contentPadding = PaddingValues(12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(4.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    var offset = 0
-                    galleryDays(visible).forEach { (date, photos) ->
-                        val groupOffset = offset
-                        item(key = "date-$date", span = { GridItemSpan(maxLineSpan) }) {
-                            Text(
-                                dateHeading(date),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Siderea.palette.onBackground,
-                                modifier = Modifier.padding(top = 20.dp, bottom = 10.dp, start = 4.dp),
-                            )
-                        }
-                        itemsIndexed(photos, key = { _, photo -> photo.uri }) { index, photo ->
-                            GalleryThumbnail(photo, viewModel.repository) {
-                                initialIndex = groupOffset + index
-                                viewing = visible
+                state.loading && state.photos.isEmpty() -> {
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = Siderea.palette.accent)
+                    }
+                }
+
+                visible.isEmpty() -> {
+                    GalleryMessage(
+                        if (day == null) "Your photos will appear here" else "No photos on this date",
+                        if (day == null) "Take a photo" else "Show all photos",
+                        if (day == null) {
+                            onBack
+                        } else {
+                            { dayString = null }
+                        },
+                    )
+                }
+
+                else -> {
+                    LazyVerticalGrid(
+                        GridCells.Adaptive(100.dp),
+                        modifier = Modifier.weight(1f),
+                        contentPadding = PaddingValues(12.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                    ) {
+                        var offset = 0
+                        galleryDays(visible).forEach { (date, photos) ->
+                            val groupOffset = offset
+                            item(key = "date-$date", span = { GridItemSpan(maxLineSpan) }) {
+                                Text(
+                                    dateHeading(date),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Siderea.palette.onBackground,
+                                    modifier = Modifier.padding(top = 20.dp, bottom = 10.dp, start = 4.dp),
+                                )
                             }
+                            itemsIndexed(photos, key = { _, photo -> photo.uri }) { index, photo ->
+                                GalleryThumbnail(
+                                    photo,
+                                    viewModel.repository,
+                                    selected = photo.uri in selected,
+                                    onLongClick = {
+                                        selecting = true
+                                        selected = selected + photo.uri
+                                    },
+                                    onClick = {
+                                        if (selecting) {
+                                            selected =
+                                                if (photo.uri in
+                                                    selected
+                                                ) {
+                                                    selected - photo.uri
+                                                } else {
+                                                    selected + photo.uri
+                                                }
+                                        } else {
+                                            initialIndex = groupOffset + index
+                                            viewing = visible
+                                        }
+                                    },
+                                )
+                            }
+                            offset += photos.size
                         }
-                        offset += photos.size
                     }
                 }
             }
+        }
+    }
+    deleting?.let { photos ->
+        AlertDialog(
+            onDismissRequest = { if (!state.busy) deleting = null },
+            title = { Text(if (photos.size == 1) "Delete photo?" else "Delete ${photos.size} photos?") },
+            text = {
+                Text(
+                    if (photos.any {
+                            it.sessionId != null && !it.sessionExport
+                        }
+                    ) {
+                        "This permanently removes the selected files, including source frames " +
+                            "used by future session exports."
+                    } else {
+                        "These files will be permanently deleted."
+                    },
+                )
+            },
+            confirmButton = {
+                TextButton(enabled = !state.busy, onClick = {
+                    viewModel.delete(photos) {
+                        deleting = null
+                        selected =
+                            emptySet()
+                        selecting = false
+                    }
+                }) { Text(if (state.busy) "Deleting…" else "Delete") }
+            },
+            dismissButton = {
+                TextButton(enabled = !state.busy, onClick = {
+                    deleting = null
+                }) { Text("Cancel") }
+            },
+            containerColor = Siderea.palette.surface,
+        )
+    }
+    state.notice?.let { notice ->
+        LaunchedEffect(notice) {
+            android.widget.Toast
+                .makeText(context, notice, android.widget.Toast.LENGTH_LONG)
+                .show()
+            viewModel.clearNotice()
         }
     }
 }
@@ -223,6 +351,8 @@ private fun GalleryMessage(
 private fun GalleryThumbnail(
     photo: GalleryPhoto,
     repository: GalleryRepository,
+    selected: Boolean,
+    onLongClick: () -> Unit,
     onClick: () -> Unit,
 ) {
     val bitmap by produceState<Bitmap?>(null, photo.uri) { value = repository.image(photo) }
@@ -232,8 +362,10 @@ private fun GalleryThumbnail(
             .aspectRatio(1f)
             .clip(SideriaShapes.small)
             .background(Siderea.palette.surfaceRaised)
-            .semantics { contentDescription = "${photo.name}, ${photo.date()}" }
-            .clickable(role = Role.Button, onClick = onClick),
+            .semantics {
+                contentDescription = "${photo.name}, ${photo.date()}"
+                this.selected = selected
+            }.combinedClickable(role = Role.Button, onClick = onClick, onLongClick = onLongClick),
     ) {
         if (bitmap != null) {
             Image(
@@ -256,6 +388,14 @@ private fun GalleryThumbnail(
                 style = Siderea.text.caption,
                 color = Siderea.palette.onBackground,
                 modifier = Modifier.align(Alignment.BottomStart).background(Siderea.palette.background).padding(6.dp),
+            )
+        }
+        if (selected) {
+            Icon(
+                Icons.Default.CheckCircle,
+                "Selected",
+                tint = Siderea.palette.accent,
+                modifier = Modifier.align(Alignment.TopEnd).padding(8.dp),
             )
         }
     }

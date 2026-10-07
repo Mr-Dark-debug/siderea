@@ -7,6 +7,7 @@ import androidx.activity.compose.LocalActivity
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -139,6 +140,25 @@ fun TimelapsePanel(
             .verticalScroll(scroll),
         verticalArrangement = Arrangement.spacedBy(SideriaSpacing.sm),
     ) {
+        Row(horizontalArrangement = Arrangement.spacedBy(SideriaSpacing.xs)) {
+            ChipButton(
+                "Normal",
+                { actions.onAstroTimelapse(false) },
+                selected = !setup.astroTimelapse,
+                description = "Normal timelapse",
+            )
+            ChipButton(
+                "Astro",
+                { actions.onAstroTimelapse(true) },
+                selected = setup.astroTimelapse,
+                description = "Astro timelapse",
+                enabled = state.limits?.manualExposure == true,
+            )
+        }
+        if (setup.astroTimelapse) {
+            AstroTimelapsePanel(state, actions)
+            return@Column
+        }
         Calculator(state)
         Text("INTERVAL", style = Siderea.text.caption, color = Siderea.palette.onSurfaceMuted)
         LazyRow(horizontalArrangement = Arrangement.spacedBy(SideriaSpacing.xs)) {
@@ -290,6 +310,51 @@ fun TimelapsePanel(
             ChipButton("SESSIONS", actions.onOpenSessions)
         }
         Hint("Press the shutter to run the checklist and start.")
+    }
+}
+
+@Composable
+private fun AstroTimelapsePanel(
+    state: CameraUiState,
+    actions: CameraActions,
+) {
+    val setup = state.timelapse
+    var advanced by remember { mutableStateOf(false) }
+    SkyPresetPicker(state, actions, video = true)
+    SkySummary(state)
+    Text("RECORD FOR", style = Siderea.text.caption, color = Siderea.palette.onSurfaceMuted)
+    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        listOf(5, 10, 30, 60, 120).forEach { minutes ->
+            ChipButton("$minutes min", {
+                actions.onTimelapse { it.copy(astroDurationMs = minutes * MS_PER_MINUTE, astroUntilStopped = false) }
+            }, selected = !setup.astroUntilStopped && setup.astroDurationMs == minutes * MS_PER_MINUTE)
+        }
+        ChipButton("Until stopped", {
+            actions.onTimelapse { it.copy(astroUntilStopped = true) }
+        }, selected = setup.astroUntilStopped)
+    }
+    if (!setup.astroUntilStopped) {
+        val frames = setup.astroDurationMs / SkyCapturePolicy.setup(state).intervalMs + 1
+        Text(
+            "About $frames frames · ${"%.1f".format(java.util.Locale.ROOT, frames.toFloat() / setup.astroFps)}s video",
+            style = Siderea.text.caption,
+            color = Siderea.palette.onSurfaceMuted,
+        )
+    }
+    ChipButton(if (advanced) "Hide advanced" else "Advanced", { advanced = !advanced }, selected = advanced)
+    if (advanced) {
+        SkyAdvanced(state, actions)
+        Text("VIDEO FRAME RATE", style = Siderea.text.caption, color = Siderea.palette.onSurfaceMuted)
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            listOf(24, 30).forEach { fps ->
+                ChipButton(
+                    "$fps fps",
+                    { actions.onTimelapse { it.copy(astroFps = fps) } },
+                    selected =
+                        setup.astroFps == fps,
+                )
+            }
+        }
     }
 }
 

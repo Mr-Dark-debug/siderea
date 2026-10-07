@@ -61,6 +61,8 @@ class CameraActions(
     val onDismissMessage: () -> Unit,
     val onRetry: () -> Unit,
     val onTimelapse: ((TimelapseSetup) -> TimelapseSetup) -> Unit,
+    val onSkyPreset: (io.github.mrdarkdebug.siderea.core.capture.session.SkyPreset) -> Unit,
+    val onAstroTimelapse: (Boolean) -> Unit,
     val onMeasure: () -> Unit,
     val onOpenSessions: () -> Unit,
     val onPreflightStart: () -> Unit,

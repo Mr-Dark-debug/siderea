@@ -158,6 +158,8 @@ fun CameraScreen(
                 onDismissMessage = viewModel::dismissMessage,
                 onRetry = viewModel::retryOpen,
                 onTimelapse = viewModel::setTimelapse,
+                onSkyPreset = viewModel::setSkyPreset,
+                onAstroTimelapse = viewModel::setAstroTimelapse,
                 onMeasure = viewModel::measureOverhead,
                 onOpenSessions = { onOpenSessions(null) },
                 onPreflightStart = viewModel::confirmStart,
@@ -299,10 +301,40 @@ private fun CameraContent(
                 IconTarget(Icons.Default.Settings, "Settings", actions.onSettings)
                 Spacer(Modifier.weight(1f))
                 ChipButton(
-                    if (state.timerSeconds == 0) "Timer off" else "${state.timerSeconds}s",
-                    actions.onCycleTimer,
-                    selected = state.timerSeconds > 0,
-                    description = timerDescription(state.timerSeconds),
+                    if (SkyCapturePolicy.usesSky(state)) {
+                        if (state.timelapse.skyDelaySeconds ==
+                            0
+                        ) {
+                            "No delay"
+                        } else {
+                            "Delay ${state.timelapse.skyDelaySeconds}s"
+                        }
+                    } else {
+                        if (state.timerSeconds == 0) "Timer off" else "${state.timerSeconds}s"
+                    },
+                    {
+                        if (SkyCapturePolicy.usesSky(state)) {
+                            actions.onTimelapse {
+                                val next = (skyStartDelays.indexOf(it.skyDelaySeconds) + 1) % skyStartDelays.size
+                                it.copy(skyDelaySeconds = skyStartDelays[next])
+                            }
+                        } else {
+                            actions.onCycleTimer()
+                        }
+                    },
+                    selected =
+                        if (SkyCapturePolicy.usesSky(state)) {
+                            state.timelapse.skyDelaySeconds > 0
+                        } else {
+                            state.timerSeconds >
+                                0
+                        },
+                    description =
+                        if (SkyCapturePolicy.usesSky(state)) {
+                            "Sky start delay ${state.timelapse.skyDelaySeconds} seconds. Tap to change."
+                        } else {
+                            timerDescription(state.timerSeconds)
+                        },
                 )
                 IconTarget(Icons.Default.Tune, "Camera tools", { tools = true })
             }
@@ -324,27 +356,29 @@ private fun CameraContent(
         EngineProblem(state, actions.onRetry)
         CappedFontScale(CHROME_MAX_FONT_SCALE) {
             Column {
-                Row(
-                    Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    ChipButton("Auto", {
-                        actions.onShutterManual(false)
-                        actions.onIsoManual(false)
-                        actions.onFocusManual(false)
-                        actions.onWhiteBalance(state.settings.whiteBalance.copy(mode = WbMode.AUTO))
-                        actions.onClosePanel()
-                        pro = false
-                    }, selected = !pro, modifier = Modifier.weight(1f))
-                    ChipButton("Pro", { pro = true }, selected = pro, modifier = Modifier.weight(1f))
-                    if (!pro) {
-                        ChipButton(CameraFormat.evLabel(state.settings.evStops), {
-                            actions.onTogglePanel(ControlPanel.EV)
-                        }, description = "EV exposure brightness")
+                if (!SkyCapturePolicy.usesSky(state)) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        ChipButton("Auto", {
+                            actions.onShutterManual(false)
+                            actions.onIsoManual(false)
+                            actions.onFocusManual(false)
+                            actions.onWhiteBalance(state.settings.whiteBalance.copy(mode = WbMode.AUTO))
+                            actions.onClosePanel()
+                            pro = false
+                        }, selected = !pro, modifier = Modifier.weight(1f))
+                        ChipButton("Pro", { pro = true }, selected = pro, modifier = Modifier.weight(1f))
+                        if (!pro) {
+                            ChipButton(CameraFormat.evLabel(state.settings.evStops), {
+                                actions.onTogglePanel(ControlPanel.EV)
+                            }, description = "EV exposure brightness")
+                        }
                     }
+                    if (pro) ReadoutRow(state, actions)
                 }
-                if (pro) ReadoutRow(state, actions)
                 if (state.device.thermalWarning) StatusLine(state)
                 ModeStrip(state.mode, actions.onSelectMode)
                 BottomRow(state, actions, viewModel)

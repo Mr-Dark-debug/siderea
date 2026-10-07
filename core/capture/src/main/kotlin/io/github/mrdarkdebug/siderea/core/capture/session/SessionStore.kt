@@ -222,6 +222,24 @@ class SessionHandle internal constructor(
     fun usableFrames(excluded: Set<Int> = emptySet()): List<FrameRecord> =
         frames.filter { it.error == null && it.index !in excluded && (it.hasJpeg || it.hasDng) }
 
+    /** Remove only the requested medium, retaining its paired file and the frame's capture metadata. */
+    @Synchronized
+    fun removeMedia(
+        name: String,
+        raw: Boolean,
+    ) {
+        check(manifest.status != SessionStatus.RUNNING) { "Stop or finalise this session before deleting its frames." }
+        require(Regex("IMG_[0-9]{6}").matches(name)) { "Invalid frame name." }
+        val frame = frameList.firstOrNull { it.name == name } ?: error("This frame is no longer in the session.")
+        val target = if (raw) rawFile(name) else jpegFile(name)
+        if (target.exists() && !target.delete()) throw IOException("Couldn't delete this frame.")
+        val updated =
+            if (raw) frame.copy(hasDng = false, dngBytes = 0) else frame.copy(hasJpeg = false, jpegBytes = 0)
+        appendFrame(updated)
+        writeManifest()
+        if (!updated.hasJpeg && !updated.hasDng) previewFile(name).delete()
+    }
+
     companion object {
         private const val MANIFEST_EVERY = 10
 

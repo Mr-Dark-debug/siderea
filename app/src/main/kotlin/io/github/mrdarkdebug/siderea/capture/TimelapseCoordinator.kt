@@ -125,6 +125,7 @@ class TimelapseCoordinator
                 outputFps = setup.fps,
                 adaptToHeat = setup.adaptToHeat,
                 rampExposure = setup.rampExposure,
+                skyPreset = setup.skyPreset.takeIf { setup.astroTimelapse },
             )
 
         /** The checklist, judged against what the phone is really doing right now. */

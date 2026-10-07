@@ -25,6 +25,8 @@ data class UpdateState(
     val readyVersion: String? = null,
     val message: String? = null,
     val showPrompt: Boolean = false,
+    val lastCheck: Long = 0,
+    val problem: Boolean = false,
 )
 
 @HiltViewModel
@@ -35,7 +37,13 @@ class UpdateViewModel
     constructor(
         private val repository: UpdateRepository,
     ) : ViewModel() {
-        private val mutable = MutableStateFlow(UpdateState(automatic = repository.prefs.getBoolean("automatic", true)))
+        private val mutable =
+            MutableStateFlow(
+                UpdateState(
+                    automatic = repository.prefs.getBoolean("automatic", true),
+                    lastCheck = repository.prefs.getLong("last_check", 0),
+                ),
+            )
         val state = mutable.asStateFlow()
         private var job: Job? = null
 
@@ -43,8 +51,18 @@ class UpdateViewModel
             if (job?.isActive == true) return
             job =
                 viewModelScope.launch {
-                    if (repository.pending() != null) {
-                        mutable.update { it.copy(readyVersion = repository.prefs.getString("pending_version", null)) }
+                    val pending = repository.pending()
+                    mutable.update {
+                        it.copy(
+                            readyVersion =
+                                if (pending !=
+                                    null
+                                ) {
+                                    repository.prefs.getString("pending_version", null)
+                                } else {
+                                    null
+                                },
+                        )
                     }
                     val last = repository.prefs.getLong("last_check", 0)
                     if (state.value.automatic &&
@@ -70,7 +88,7 @@ class UpdateViewModel
         }
 
         private suspend fun checkNow(automatic: Boolean) {
-            mutable.update { it.copy(checking = true, message = null) }
+            mutable.update { it.copy(checking = true, message = null, problem = false) }
             try {
                 val candidate = repository.check()
                 repository.prefs
@@ -81,6 +99,7 @@ class UpdateViewModel
                     it.copy(
                         checking = false,
                         candidate = candidate,
+                        lastCheck = repository.prefs.getLong("last_check", 0),
                         message = if (candidate == null) "You're up to date" else null,
                     )
                 }
@@ -92,7 +111,14 @@ class UpdateViewModel
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
-                mutable.update { it.copy(checking = false, message = e.message ?: "Couldn't check for updates.") }
+                mutable.update {
+                    it.copy(
+                        checking = false,
+                        problem = true,
+                        message =
+                            e.message ?: "Couldn't check for updates.",
+                    )
+                }
             }
         }
 
@@ -103,7 +129,7 @@ class UpdateViewModel
         }
 
         private suspend fun downloadNow(candidate: AppUpdate) {
-            mutable.update { it.copy(progress = 0f, message = null) }
+            mutable.update { it.copy(progress = 0f, message = null, problem = false) }
             try {
                 repository.download(candidate) { progress -> mutable.update { it.copy(progress = progress) } }
                 mutable.update { it.copy(progress = null, readyVersion = candidate.version, showPrompt = true) }
@@ -111,7 +137,14 @@ class UpdateViewModel
                 mutable.update { it.copy(progress = null, message = "Download cancelled") }
                 throw e
             } catch (e: Exception) {
-                mutable.update { it.copy(progress = null, message = e.message ?: "Couldn't download the update.") }
+                mutable.update {
+                    it.copy(
+                        progress = null,
+                        problem = true,
+                        message =
+                            e.message ?: "Couldn't download the update.",
+                    )
+                }
             }
         }
 
@@ -159,6 +192,7 @@ class UpdateViewModel
                             it.copy(
                                 readyVersion = null,
                                 showPrompt = false,
+                                problem = true,
                                 message = e.message ?: "Couldn't open Android's installer. Check for updates to retry.",
                             )
                         }

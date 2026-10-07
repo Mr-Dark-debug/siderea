@@ -75,7 +75,7 @@ class SideriaSmokeTest {
         rule.onNodeWithText("BULB").performClick()
         rule.waitUntilAtLeastOneExists(hasText("TOTAL EXPOSURE"), 10_000)
         rule.onNodeWithText("ASTRO").performClick()
-        rule.waitUntilAtLeastOneExists(hasText("GAP BETWEEN FRAMES"), 10_000)
+        rule.waitUntilAtLeastOneExists(hasText("CAPTURE LENGTH"), 10_000)
         rule.onNodeWithText("TIMELAPSE").performClick()
         rule.waitUntilAtLeastOneExists(hasText("INTERVAL"), 10_000)
     }
@@ -193,6 +193,9 @@ class SideriaSmokeTest {
         rule.onNode(redMode).performClick()
         rule.waitUntilToggle(redMode, on = true)
         rule.onNodeWithText("Reset settings").performScrollTo().performClick()
+        rule.waitUntilExactlyOneExists(hasText("Reset settings?"), 5000)
+        rule.onNodeWithText("Reset").performClick()
+        rule.onNode(hasScrollAction()).performScrollToNode(redMode)
         rule.waitUntilToggle(redMode, on = false)
     }
 
