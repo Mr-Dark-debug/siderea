@@ -94,12 +94,7 @@ class GalleryEdits
                     resolver.openFileDescriptor(uri, "rw")?.use {
                         val exif = ExifInterface(it.fileDescriptor)
                         metadata.forEach { (tag, value) -> exif.setAttribute(tag, value) }
-                        if (metadata[ExifInterface.TAG_DATETIME_ORIGINAL] == null) {
-                            exif.setAttribute(
-                                ExifInterface.TAG_DATETIME_ORIGINAL,
-                                Instant.ofEpochMilli(photo.capturedAt).atZone(ZoneId.systemDefault()).format(EXIF_DATE),
-                            )
-                        }
+                        writeCaptureDate(exif, metadata, photo.capturedAt)
                         exif.setAttribute(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL.toString())
                         exif.setAttribute(ExifInterface.TAG_IMAGE_WIDTH, rendered.width.toString())
                         exif.setAttribute(ExifInterface.TAG_IMAGE_LENGTH, rendered.height.toString())
@@ -125,11 +120,29 @@ class GalleryEdits
                 }
             }
 
+        private fun writeCaptureDate(
+            exif: ExifInterface,
+            metadata: Map<String, String>,
+            capturedAt: Long,
+        ) {
+            if (metadata[ExifInterface.TAG_DATETIME_ORIGINAL] != null && metadata["OffsetTimeOriginal"] != null) return
+            // MediaStore needs an explicit offset to retain old captures after scanning a new copy.
+            val captured = Instant.ofEpochMilli(capturedAt).atZone(ZoneId.systemDefault())
+            exif.setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, captured.format(EXIF_DATE))
+            exif.setAttribute("OffsetTimeOriginal", captured.format(EXIF_OFFSET))
+            exif.setAttribute(
+                ExifInterface.TAG_SUBSEC_TIME_ORIG,
+                "%03d".format(Locale.ROOT, captured.nano / NANOS_PER_MILLISECOND),
+            )
+        }
+
         private companion object {
             const val MAX_PIXELS = 8_000_000.0
             const val MAX_EDGE = 4096
             const val JPEG_QUALITY = 95
+            const val NANOS_PER_MILLISECOND = 1_000_000
             val EXIF_DATE: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss", Locale.ROOT)
+            val EXIF_OFFSET: DateTimeFormatter = DateTimeFormatter.ofPattern("xxx", Locale.ROOT)
             val EXIF_TAGS =
                 listOf(
                     ExifInterface.TAG_MAKE,

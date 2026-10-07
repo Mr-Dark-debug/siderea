@@ -48,6 +48,11 @@ these presets are starting points, not a quality promise or Pixel Night Sight pr
 
 ## Research
 
+Android's [DATE_TAKEN documentation](https://developer.android.com/reference/android/provider/MediaStore.MediaColumns#DATE_TAKEN)
+requires an EXIF capture time and offset for reliable indexing. Edited copies retain both, adding the known source
+capture instant's offset and milliseconds when an older source lacks an offset. This keeps calendar grouping stable
+after Android scans the new JPEG.
+
 Google's [night photography guide](https://support.google.com/pixelcamera/answer/9708795?hl=en) describes stable placement,
 far focus, start timers and optional astro time lapse. Its [video guide](https://support.google.com/pixelcamera/answer/7064897?hl=en)
 places Night Sight inside Time Lapse's light controls. These informed Siderea's simple preset/start flow and Normal/Astro

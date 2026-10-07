@@ -4,6 +4,16 @@ All notable changes are recorded here. Each milestone lists **what works**, **wh
 real device**, and **known issues**. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.2.2] - 2026-10-07
+
+### Fixed
+- Edited older photos now carry an explicit capture-time offset and milliseconds when the source lacks
+  an offset. Android's media scan retains their original capture date, so copies stay under the correct
+  calendar day instead of appearing under Today. A regression check verifies the indexed date after publication.
+- Includes the gallery editor/delete/share tools, four sky presets, Moon averaging, astro timelapse,
+  simpler settings, readable amber/red palettes and verified GitHub updates from v1.2.
+- Same persistent signing key as v1.1.2. See [validation](docs/VALIDATION-1.2.md) for upgrade evidence.
+
 ## [1.2.1] - 2026-10-07
 
 ### Fixed

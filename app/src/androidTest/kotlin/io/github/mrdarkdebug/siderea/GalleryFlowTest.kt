@@ -107,6 +107,10 @@ class GalleryFlowTest {
                     ExifInterface.TAG_DATETIME,
                     day.atTime(12, 0).format(DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")),
                 )
+                exif.setAttribute(
+                    "OffsetTimeOriginal",
+                    day.atTime(12, 0).atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("xxx")),
+                )
                 exif.saveAttributes()
             }
             context.contentResolver.update(
@@ -354,7 +358,6 @@ class GalleryFlowTest {
     }
 
     @Test fun viewerDeletionCanBeCancelledThenConfirmed() {
-        // MediaStore may temporarily date the yesterday fixture by DATE_ADDED while scanning its EXIF.
         // Keep only the today fixture in this filtered viewer to exercise deletion of its final image.
         context.contentResolver.delete(owned[1], null, null)
         rule.onNodeWithContentDescription("Show calendar").performClick()

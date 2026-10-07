@@ -55,5 +55,7 @@ Focused emulator checks: GalleryFlowTest, UpdateIntegrityTest, SideriaSmokeTest 
 For the complete production updater, build an isolated lower-version fixture from the same source and key
 (`-Psiderea.versionName=1.0.99`), install it on a disposable emulator, capture a photo and change a preference.
 Open the published GitHub update through Settings; approve Android's source permission and installation.
-After restart verify version 1.1.2, retained photo/preference/session data and obsolete installer cleanup.
+After restart verify the published version, retained photo/preference/session data and obsolete installer cleanup.
 The lower-version fixture is test setup, not evidence that the old differently signed v1.0.0 can be replaced.
+The v1.2 validation uses the actual retained v1.1.2 installation and published APKs; see
+[the release validation report](VALIDATION-1.2.md).

@@ -3,6 +3,7 @@ package io.github.mrdarkdebug.siderea
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
+import android.media.ExifInterface
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.test.core.app.ApplicationProvider
@@ -20,12 +21,17 @@ import io.github.mrdarkdebug.siderea.export.ExportCoordinator
 import io.github.mrdarkdebug.siderea.ui.gallery.GalleryEdits
 import io.github.mrdarkdebug.siderea.ui.gallery.GalleryPhoto
 import io.github.mrdarkdebug.siderea.ui.gallery.GalleryRepository
+import io.github.mrdarkdebug.siderea.ui.gallery.PhotoEdit
 import kotlinx.coroutines.runBlocking
 import org.junit.After
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 class GallerySafetyTest {
     private val context = ApplicationProvider.getApplicationContext<Context>()
@@ -138,5 +144,42 @@ class GallerySafetyTest {
             context.contentResolver.query(uri, arrayOf(MediaStore.Images.Media._ID), null, null, null)!!.use {
                 assertTrue(it.count == 1)
             }
+        }
+
+    @Test fun editedOlderCaptureKeepsIndexedDateWithoutSourceOffset() =
+        runBlocking {
+            val handle = fixture(SessionStatus.COMPLETED)
+            val taken = Instant.parse("2024-03-10T23:30:45.123Z").toEpochMilli()
+            val bitmap = Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888)
+            val original = handle.jpegFile("IMG_000001")
+            original.outputStream().use { bitmap.compress(Bitmap.CompressFormat.JPEG, 90, it) }
+            bitmap.recycle()
+            ExifInterface(original).apply {
+                setAttribute(
+                    ExifInterface.TAG_DATETIME_ORIGINAL,
+                    Instant
+                        .ofEpochMilli(taken)
+                        .atZone(ZoneId.systemDefault())
+                        .format(DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")),
+                )
+                saveAttributes()
+            }
+            handle.appendFrame(FrameRecord(0, "IMG_000001", 0, taken, hasJpeg = true, hasDng = true))
+            handle.writeManifest()
+            val sourceBytes = original.readBytes()
+            val source = repository.list().first { it.sessionId == handle.id && it.mime == "image/jpeg" }
+            val copy = repository.saveCopy(source, PhotoEdit())
+            val uri = Uri.parse(copy.uri)
+            owned += uri
+            context.contentResolver.query(uri, arrayOf(MediaStore.Images.Media.DATE_TAKEN), null, null, null)!!.use {
+                assertTrue(it.moveToFirst())
+                assertEquals(taken, it.getLong(0))
+            }
+            // The insertion URI uses external_primary; the library queries the aggregate external volume.
+            assertEquals(taken, repository.list().first { it.name == copy.name }.capturedAt)
+            context.contentResolver.openFileDescriptor(uri, "r")!!.use {
+                assertTrue(ExifInterface(it.fileDescriptor).getAttribute("OffsetTimeOriginal") != null)
+            }
+            assertTrue(sourceBytes.contentEquals(original.readBytes()))
         }
 }
