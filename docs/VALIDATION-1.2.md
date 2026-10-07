@@ -107,9 +107,46 @@ The final v1.2.3 build then passed quality/lint, all 323 host tests and both APK
 gallery safety/flow checks passed, including indexed old-date retention and the legacy-copy fallback.
 The optimized APK's certificate matched the persistent key, with package/version 1.2.3 (10203).
 
+### Final published v1.2.3
+
+The [v1.2.3 release](https://github.com/Mr-Dark-debug/siderea/releases/tag/v1.2.3),
+[CI run](https://github.com/Mr-Dark-debug/siderea/actions/runs/37683865601) and
+[release run](https://github.com/Mr-Dark-debug/siderea/actions/runs/37683869909) all completed successfully
+from source commit `728289eb3cf70076559b2e78a88410a1a57d7683`.
+
+| Published APK check | Verified value |
+|---|---|
+| Asset | `siderea-v1.2.3-debug-signed.apk` |
+| Size | 3,793,058 bytes |
+| SHA-256 | `a96dc369b641349583299ca2819490c12927d29946805bdfad70e20b2ca00ac6` |
+| Package/version | `io.github.mrdarkdebug.siderea`, 1.2.3 (10203) |
+| Signer | Same persistent certificate recorded above |
+
+The downloaded public APK matched its SHA-256 sidecar, GitHub asset digest and size. APK signature
+verification and package/version inspection passed. The production v1.2.1 app's manual check detected v1.2.3;
+Download produced a verified pending installer whose bytes matched that public APK exactly. Install opened
+Android's Update confirmation, installation completed, and Open launched v1.2.3. Install-source permission
+was already granted from the earlier upgrade test.
+
+Before further editing or settings changes, all fourteen retained files were byte-identical: ten session
+files, the 793-byte preference file and three shared photos. Installer files and pending metadata were removed.
+A manual check reported You're up to date. This completes the tested published upgrade chain
+**v1.1.2 → v1.2.1 → v1.2.3**, with no uninstall or data reset.
+
+The actual published editor then saved a rotated square copy of the 5 October photo without changing the
+59,760-byte original. Source and edited copy both had indexed capture time `1791228995704`; the edited JPEG
+was 1392 × 1392 with EXIF date `2026:10:05 21:36:35`, offset `+02:00`, and milliseconds `704`. The gallery
+showed the copy under 5 October alongside its original, with eight total images. Actual v1.2.3 camera,
+gallery/calendar, editor, Astro, Astro timelapse, settings and Updates screenshots are in
+[the README](../README.md#screenshots). The
+[Android confirmation](screenshots/android-update-confirmation.png) and
+[installed result](screenshots/update-installed-1.2.png) document the real installer flow.
+
 ## Limits
 
 No real-phone camera, real-night-sky image quality or OEM installer checks have been performed.
+Runtime checks used API 36; Android 10 compatibility uses the AndroidX implementation and host date-policy
+checks, with no API 29 runtime run in this validation.
 The emulator validates workflows, stored configuration, pixel transformations, media ownership and export,
 using its virtual camera rather than a star field. Synthetic host tests cover star detection/alignment.
 Presets are starting points within reported lens limits. Siderea does not include Google's proprietary

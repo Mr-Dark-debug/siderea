@@ -34,7 +34,7 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 | ✅ | **M5** Virtual Bulb long exposure | v0.6.0 | done, emulator-verified |
 | ✅ | **M6** Exposure ramp, polish, accessibility | v1.0.0 | done, emulator-verified |
 | ✅ | **M7** Simpler camera, calendar gallery, GitHub updates | v1.1.2 | emulator-verified; see validation report |
-| ✅ | **M8** Gallery editor/management, sky presets, astro timelapse | v1.2.2 | see [validation report](docs/VALIDATION-1.2.md) |
+| ✅ | **M8** Gallery editor/management, sky presets, astro timelapse | v1.2.3 | see [validation report](docs/VALIDATION-1.2.md) |
 
 > **Honest caveat.** Everything camera-related has been run on Android *emulators* and checked against a real
 > Pixel 10 *capability report*, but not yet on the phone itself. The first people to run it on hardware will
@@ -43,28 +43,26 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 ## Screenshots
 
 <p align="center">
-  <img src="docs/screenshots/camera-auto.png" width="23%" alt="Simplified Auto camera and large shutter">
-  <img src="docs/screenshots/gallery.png" width="23%" alt="Built-in gallery with date headings">
-  <img src="docs/screenshots/gallery-calendar.png" width="23%" alt="Calendar with markers for dates with photos">
-  <img src="docs/screenshots/updates.png" width="23%" alt="GitHub update settings after verified installation">
+  <img src="docs/screenshots/camera-1.2.png" width="23%" alt="Auto camera and large shutter">
+  <img src="docs/screenshots/gallery-1.2.png" width="23%" alt="Gallery with date headings and selection">
+  <img src="docs/screenshots/gallery-calendar-1.2.png" width="23%" alt="Calendar with markers for capture dates">
+  <img src="docs/screenshots/gallery-editor.png" width="23%" alt="Photo editor with crop, light and color controls">
 </p>
 <p align="center">
-  <img src="docs/screenshots/gallery-details.png" width="23%" alt="Real photo capture and file details">
-  <img src="docs/screenshots/update-ready.png" width="23%" alt="Automatically downloaded and verified update">
+  <img src="docs/screenshots/astro-presets.png" width="23%" alt="Night sky, Milky Way, Star trails and Moon presets">
+  <img src="docs/screenshots/astro-timelapse.png" width="23%" alt="Astro timelapse with recording length and exposure summary">
+  <img src="docs/screenshots/settings-1.2.png" width="23%" alt="Simpler settings groups">
+  <img src="docs/screenshots/updates-1.2.png" width="23%" alt="Dedicated GitHub update page after verified installation">
 </p>
 <p align="center">
-  <img src="docs/screenshots/timelapse-setup.png" width="23%" alt="Timelapse setup with calculator">
-  <img src="docs/screenshots/timelapse-running.png" width="23%" alt="A running timelapse">
-  <img src="docs/screenshots/timelapse-resume.png" width="23%" alt="Resume prompt after an interruption">
-  <img src="docs/screenshots/export-video.png" width="23%" alt="Video export settings with a live estimate">
-  <img src="docs/screenshots/astro-panel.png" width="23%" alt="Astro mode setup">
-  <img src="docs/screenshots/bulb-panel.png" width="23%" alt="Virtual bulb setup, warning that this camera has no manual shutter">
+  <img src="docs/screenshots/update-ready-1.2.png" width="23%" alt="Downloaded and verified v1.2.3 update">
+  <img src="docs/screenshots/update-installed-1.2.png" width="23%" alt="Android confirms successful replacement installation">
 </p>
 
-<sub>Captured on Android emulators. The first six show the v1.1.2 release and update flow using the emulator's moving test pattern;
-the remaining screenshots document earlier capture features. Real-device screenshots will replace these.</sub>
+<sub>Captured from the published v1.2.3 APK on an Android emulator using its moving camera test pattern.
+The last two show the v1.2.1 → v1.2.3 updater and Android installer. These are workflow screenshots, not real-night-sky photographs.</sub>
 
-## What it does today (v1.2.2)
+## What it does today (v1.2.3)
 
 - **Simpler camera:** Auto and Pro, a larger viewfinder, compact lens selectors and a Tools sheet for
   format, aspect and shooting aids. The shutter and built-in gallery stay one tap away.

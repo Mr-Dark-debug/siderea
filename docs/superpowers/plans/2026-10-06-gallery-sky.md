@@ -29,6 +29,6 @@
 ### 4. Verification and release
 
 - [x] Run `./gradlew.bat qualityCheck testDebugUnitTest :app:lint :app:assembleDebug :app:assembleRelease :app:assembleDebugAndroidTest --max-workers=2 --console=plain`; inspect every exit status and test report.
-- [ ] Install finished debug APKs on siderea_api36 and run affected instrumentation. Review actual screenshots at standard and 320dp widths; restore emulator display size afterwards.
-- [ ] Update docs/version to 1.2.0, commit reviewed implementation, push main/tag under existing release authorization, await release workflow. If runners queue, follow documented manual artifact publication only after local verification.
-- [ ] Download actual published APK/checksum, verify version/certificate, use the app's updater to replace v1.1.2 on the disposable emulator and verify retained photos/session/preferences. Record exact evidence and unverified real-phone/sky limits.
+- [x] Install finished debug APKs on siderea_api36 and run affected instrumentation. Review actual screenshots at standard and 320dp widths; restore emulator display size afterwards.
+- [x] Update docs/version to final 1.2.3, commit reviewed implementation, push main/tag under existing release authorization, await release workflow. GitHub CI and release runs both passed; no manual publication was needed.
+- [x] Download actual published APK/checksum, verify version/certificate, use the app's updater to replace the retained v1.1.2 installation through v1.2.1 then v1.2.3 on the disposable emulator and verify retained photos/session/preferences. Record exact evidence and unverified real-phone/sky limits in `docs/VALIDATION-1.2.md`.
