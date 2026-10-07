@@ -1,4 +1,4 @@
-# Siderea 1.2.0 validation
+# Siderea 1.2.1 validation
 
 Validation date: 2026-10-07. Environment: Windows, JDK 21, Android API 36 emulator
 `siderea_api36`. This report distinguishes local checks, emulator behavior and published release verification.
@@ -24,7 +24,7 @@ ktlint and detekt reported no violations. Android lint reported zero errors. Deb
 optimized release APKs built successfully, including R8/resource shrinking. After adapting the existing
 accessibility/smoke tests to the simpler controls, quality checks and the test APK build were rerun successfully.
 
-Local release: package `io.github.mrdarkdebug.siderea`, version `1.2.0` (10200). The optimized APK's
+Final local release: package `io.github.mrdarkdebug.siderea`, version `1.2.1` (10201). The optimized APK's
 certificate SHA-256 is `f11e976967911c8e585dd88817d6587076a802840699eebf7e3c8304bedbe3b5`, matching v1.1.2.
 
 ## Emulator checks
@@ -48,7 +48,7 @@ LongExposureFlowTest (1) and UpdateIntegrityTest (3).
 
 The first full run passed 40 tests and exposed an assumption in the final-image gallery test: Android's
 asynchronous EXIF scan temporarily dated another fixture by its added date. The fixture now explicitly isolates
-the selected day's single image and clears other debug-package session fixtures. The entire seven-test
+the selected day's single image and clears other debug-package session fixtures and app-owned shared images. The entire seven-test
 gallery class then passed. Production storage was kept separate from all debug/test fixtures.
 
 All eleven gallery/accessibility checks also passed at 320 dp width (720 px, density 360).
@@ -58,8 +58,17 @@ and passed, including the sky delay button and retaining a custom capture length
 
 ## Published release and replacement
 
-Pending final verification and publication. The existing production v1.1.2 installation remains intact
-for a same-key upgrade check; debug/test packages use separate storage.
+The v1.2.0 [CI](https://github.com/Mr-Dark-debug/siderea/actions/runs/37676574153) and
+[release workflow](https://github.com/Mr-Dark-debug/siderea/actions/runs/37676577171) both passed.
+Screenshot review of that build then caught an unstyled updater label inheriting black instead of the night
+palette's text color. The v1.2.1 patch provides the active palette's default Material content color throughout
+the theme. Functional capture/gallery code is unchanged. The patch passed all build/quality/lint gates and
+319 host tests. All 26 repeated emulator checks passed across the patch run and isolated gallery recheck,
+and all four camera/settings accessibility checks passed again at 320 dp. Actual screenshots were reviewed
+in amber and red palettes. Published patch and upgrade evidence follow after publication.
+
+The existing production v1.1.2 installation remains intact for a same-key upgrade check;
+debug/test packages use separate storage.
 
 ## Limits
 

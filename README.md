@@ -34,7 +34,7 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 | ✅ | **M5** Virtual Bulb long exposure | v0.6.0 | done, emulator-verified |
 | ✅ | **M6** Exposure ramp, polish, accessibility | v1.0.0 | done, emulator-verified |
 | ✅ | **M7** Simpler camera, calendar gallery, GitHub updates | v1.1.2 | emulator-verified; see validation report |
-| ✅ | **M8** Gallery editor/management, sky presets, astro timelapse | v1.2.0 | see [validation report](docs/VALIDATION-1.2.md) |
+| ✅ | **M8** Gallery editor/management, sky presets, astro timelapse | v1.2.1 | see [validation report](docs/VALIDATION-1.2.md) |
 
 > **Honest caveat.** Everything camera-related has been run on Android *emulators* and checked against a real
 > Pixel 10 *capability report*, but not yet on the phone itself. The first people to run it on hardware will
@@ -64,7 +64,7 @@ is known to be broken: see [CHANGELOG.md](CHANGELOG.md).
 <sub>Captured on Android emulators. The first six show the v1.1.2 release and update flow using the emulator's moving test pattern;
 the remaining screenshots document earlier capture features. Real-device screenshots will replace these.</sub>
 
-## What it does today (v1.2.0)
+## What it does today (v1.2.1)
 
 - **Simpler camera:** Auto and Pro, a larger viewfinder, compact lens selectors and a Tools sheet for
   format, aspect and shooting aids. The shutter and built-in gallery stay one tap away.

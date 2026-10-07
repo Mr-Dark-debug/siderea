@@ -4,6 +4,16 @@ All notable changes are recorded here. Each milestone lists **what works**, **wh
 real device**, and **known issues**. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
+## [1.2.1] - 2026-10-07
+
+### Fixed
+- Default Material text/icons now use the active night palette. This fixes the Automatic updates label
+  blending into its dark card and keeps unstyled text readable in both amber and red modes.
+- Includes the v1.2 gallery editor/delete/share tools, four sky presets, Moon averaging, astro timelapse,
+  simpler settings and dedicated Updates page described below.
+- Uses the same persistent signing key as v1.1.2 for in-place upgrades. See [validation](docs/VALIDATION-1.2.md)
+  and [update notes](docs/UPDATES.md).
+
 ## [1.2.0] - 2026-10-07
 
 ### Added and changed

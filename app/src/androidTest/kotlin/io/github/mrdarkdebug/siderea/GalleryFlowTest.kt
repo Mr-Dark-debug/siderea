@@ -68,6 +68,12 @@ class GalleryFlowTest {
     @Before fun createPhotos() {
         // Other capture tests use this debug package's session directory; isolate the calendar fixtures.
         File(context.getExternalFilesDir(null), "Siderea").deleteRecursively()
+        check(context.packageName.endsWith(".debug"))
+        context.contentResolver.delete(
+            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+            "${MediaStore.Images.Media.OWNER_PACKAGE_NAME} = ?",
+            arrayOf(context.packageName),
+        )
         val bitmap = Bitmap.createBitmap(400, 300, Bitmap.Config.ARGB_8888)
         bitmap.eraseColor(android.graphics.Color.rgb(60, 90, 120))
         listOf(LocalDate.now(), LocalDate.now().minusDays(1)).forEachIndexed { index, day ->

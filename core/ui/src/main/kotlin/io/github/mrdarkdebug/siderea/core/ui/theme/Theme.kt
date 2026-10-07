@@ -1,6 +1,7 @@
 package io.github.mrdarkdebug.siderea.core.ui.theme
 
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.ripple
@@ -67,6 +68,7 @@ fun SideriaTheme(
         LocalSideriaText provides SideriaTextStyles(),
         LocalSideriaHaptics provides rememberSideriaHaptics(hapticsEnabled),
         LocalIndication provides ripple(color = palette.accent),
+        LocalContentColor provides palette.onBackground,
     ) {
         MaterialTheme(
             colorScheme = colorScheme,
