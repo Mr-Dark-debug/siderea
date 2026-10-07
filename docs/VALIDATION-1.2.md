@@ -1,4 +1,4 @@
-# Siderea 1.2.2 validation
+# Siderea 1.2.3 validation
 
 Validation date: 2026-10-07. Environment: Windows, JDK 21, Android API 36 emulator
 `siderea_api36`. This report distinguishes local checks, emulator behavior and published release verification.
@@ -18,19 +18,19 @@ The complete release candidate passed:
 ./gradlew.bat qualityCheck testDebugUnitTest lint assembleDebug assembleDebugAndroidTest assembleRelease --max-workers=2 --console=plain
 ```
 
-All 319 host tests passed with zero failures/errors. This includes preset clamping,
+All 323 host tests passed with zero failures/errors. This includes preset clamping,
 cadence and configuration compatibility, session-journal deletion, camera policies, processing and updater integrity.
 ktlint and detekt reported no violations. Android lint reported zero errors. Debug, instrumentation and
 optimized release APKs built successfully, including R8/resource shrinking. After adapting the existing
 accessibility/smoke tests to the simpler controls, quality checks and the test APK build were rerun successfully.
 
-Final local release: package `io.github.mrdarkdebug.siderea`, version `1.2.2` (10202). The optimized APK's
+Final local release: package `io.github.mrdarkdebug.siderea`, version `1.2.3` (10203). The optimized APK's
 certificate SHA-256 is `f11e976967911c8e585dd88817d6587076a802840699eebf7e3c8304bedbe3b5`, matching v1.1.2.
 
 ## Emulator checks
 
-All 42 distinct focused instrumentation checks passed across the main runs and final gallery rechecks:
-PhotoEditingTest (3), GallerySafetyTest (5), GalleryFlowTest (7), AstroFlowTest (3),
+All 43 distinct focused instrumentation checks passed across the main runs and final gallery rechecks:
+PhotoEditingTest (3), GallerySafetyTest (6), GalleryFlowTest (7), AstroFlowTest (3),
 SkyTimelapseFlowTest (2), AccessibilityTest (4), SideriaSmokeTest (10), TimelapseFlowTest (4),
 LongExposureFlowTest (1) and UpdateIntegrityTest (3).
 
@@ -38,6 +38,7 @@ LongExposureFlowTest (1) and UpdateIntegrityTest (3).
 - Real editor save: crop/rotation dimensions, original bytes unchanged and EXIF capture date retained.
 - Old captures without a source timezone offset retain the exact indexed epoch, including milliseconds,
   after publishing an edited copy; the library uses that original date.
+- Older offsetless copies with a null system index date use their EXIF capture date in the gallery.
 - Cancel/confirm deletion, final image in a filtered viewer, batch deletion, date/calendar filtering,
   swiping/back and publication refresh.
 - Durable source JPEG deletion with paired RAW retained, active capture rejected, processed-result deletion,
@@ -87,13 +88,24 @@ An added regression verifies both the MediaStore indexed timestamp and the repos
 original bytes. Calendar fixtures now include explicit offsets too. The Android
 [DATE_TAKEN contract](https://developer.android.com/reference/android/provider/MediaStore.MediaColumns#DATE_TAKEN)
 and [scanner source](https://android.googlesource.com/platform/packages/providers/MediaProvider/+/f2abe4aec018f0522b4b1303fb25351db0604eb5/src/com/android/providers/media/scan/ModernMediaScanner.java)
-explain why EXIF without an offset is insufficient for old copies. Final v1.2.2 publication and replacement
-evidence will be recorded below after validation.
+explain why EXIF without an offset is insufficient for old copies.
 
 The final v1.2.2 candidate passed the complete build/quality/lint command and all 319 host tests again.
 All twelve gallery safety/flow checks passed, including the new old-date regression. The first regression
 run compared the primary-volume insertion URI with the library's aggregate-volume URI; the timestamp
 assertion passed, but that test-only identity assumption was corrected to compare the unique copy name.
+Before publication, compatibility review found that the framework writer's offset support starts at API 30.
+Both v1.2.2 workflows were cancelled before an APK release was created. The v1.2.3 candidate uses AndroidX EXIF,
+which supports writing the tag on Android 10 as well. The gallery also reads EXIF if MediaStore has no capture date,
+including older offsetless copies. Host checks cover offsets, milliseconds, calendar-day boundaries, historical
+timezone rules and malformed metadata. Final v1.2.3 publication and replacement evidence follows below.
+
+The compatibility build initially exhausted the long-running local Gradle daemon's metaspace after repeated
+candidate builds. Restarting that daemon allowed the final checks to run with the repository's normal settings.
+This environment failure is separate from test results.
+The final v1.2.3 build then passed quality/lint, all 323 host tests and both APK variants. All thirteen
+gallery safety/flow checks passed, including indexed old-date retention and the legacy-copy fallback.
+The optimized APK's certificate matched the persistent key, with package/version 1.2.3 (10203).
 
 ## Limits
 

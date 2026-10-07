@@ -4,9 +4,9 @@ import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
-import android.media.ExifInterface
 import android.net.Uri
 import android.provider.MediaStore
+import androidx.exifinterface.media.ExifInterface
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -125,13 +125,17 @@ class GalleryEdits
             metadata: Map<String, String>,
             capturedAt: Long,
         ) {
-            if (metadata[ExifInterface.TAG_DATETIME_ORIGINAL] != null && metadata["OffsetTimeOriginal"] != null) return
+            if (metadata[ExifInterface.TAG_DATETIME_ORIGINAL] != null &&
+                metadata[ExifInterface.TAG_OFFSET_TIME_ORIGINAL] != null
+            ) {
+                return
+            }
             // MediaStore needs an explicit offset to retain old captures after scanning a new copy.
             val captured = Instant.ofEpochMilli(capturedAt).atZone(ZoneId.systemDefault())
             exif.setAttribute(ExifInterface.TAG_DATETIME_ORIGINAL, captured.format(EXIF_DATE))
-            exif.setAttribute("OffsetTimeOriginal", captured.format(EXIF_OFFSET))
+            exif.setAttribute(ExifInterface.TAG_OFFSET_TIME_ORIGINAL, captured.format(EXIF_OFFSET))
             exif.setAttribute(
-                ExifInterface.TAG_SUBSEC_TIME_ORIG,
+                ExifInterface.TAG_SUBSEC_TIME_ORIGINAL,
                 "%03d".format(Locale.ROOT, captured.nano / NANOS_PER_MILLISECOND),
             )
         }
@@ -153,12 +157,12 @@ class GalleryEdits
                     ExifInterface.TAG_FOCAL_LENGTH,
                     ExifInterface.TAG_DATETIME_ORIGINAL,
                     ExifInterface.TAG_DATETIME_DIGITIZED,
-                    ExifInterface.TAG_SUBSEC_TIME_ORIG,
+                    ExifInterface.TAG_SUBSEC_TIME_ORIGINAL,
                     ExifInterface.TAG_GPS_LATITUDE,
                     ExifInterface.TAG_GPS_LATITUDE_REF,
                     ExifInterface.TAG_GPS_LONGITUDE,
                     ExifInterface.TAG_GPS_LONGITUDE_REF,
-                    "OffsetTimeOriginal",
+                    ExifInterface.TAG_OFFSET_TIME_ORIGINAL,
                 )
         }
     }

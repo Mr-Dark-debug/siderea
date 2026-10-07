@@ -5,7 +5,6 @@ import android.content.Context
 import android.database.ContentObserver
 import android.graphics.Bitmap
 import android.graphics.ImageDecoder
-import android.media.ExifInterface
 import android.net.Uri
 import android.os.Handler
 import android.os.Looper
@@ -13,6 +12,7 @@ import android.provider.MediaStore
 import android.util.LruCache
 import android.util.Size
 import androidx.core.content.FileProvider
+import androidx.exifinterface.media.ExifInterface
 import dagger.hilt.android.qualifiers.ApplicationContext
 import io.github.mrdarkdebug.siderea.core.capture.session.SessionStore
 import io.github.mrdarkdebug.siderea.export.ExportCoordinator
@@ -84,15 +84,17 @@ class GalleryRepository
                         "${MediaStore.Images.Media.DATE_ADDED} DESC",
                     )?.use { c ->
                         while (c.moveToNext()) {
+                            val uri = ContentUris.withAppendedId(collection, c.getLong(0))
                             val taken =
                                 c.getLong(c.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_TAKEN)).takeIf { it > 0 }
+                                    ?: exifCaptureTime(uri)
                                     ?: (
                                         c.getLong(c.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_ADDED)) *
                                             MILLIS_PER_SECOND
                                     )
                             add(
                                 GalleryPhoto(
-                                    ContentUris.withAppendedId(collection, c.getLong(0)).toString(),
+                                    uri.toString(),
                                     c.getString(1),
                                     taken,
                                     c.getLong(c.getColumnIndexOrThrow(MediaStore.Images.Media.SIZE)),
@@ -105,6 +107,18 @@ class GalleryRepository
                     }
             }
         }
+
+        private fun exifCaptureTime(uri: Uri): Long? =
+            runCatching {
+                context.contentResolver.openFileDescriptor(uri, "r")?.use {
+                    val exif = ExifInterface(it.fileDescriptor)
+                    ExifCaptureDate.parse(
+                        exif.getAttribute(ExifInterface.TAG_DATETIME_ORIGINAL),
+                        exif.getAttribute(ExifInterface.TAG_OFFSET_TIME_ORIGINAL),
+                        exif.getAttribute(ExifInterface.TAG_SUBSEC_TIME_ORIGINAL),
+                    )
+                }
+            }.getOrNull()
 
         private fun sessionPhotos(): List<GalleryPhoto> =
             buildList {

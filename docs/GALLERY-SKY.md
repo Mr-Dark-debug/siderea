@@ -51,7 +51,10 @@ these presets are starting points, not a quality promise or Pixel Night Sight pr
 Android's [DATE_TAKEN documentation](https://developer.android.com/reference/android/provider/MediaStore.MediaColumns#DATE_TAKEN)
 requires an EXIF capture time and offset for reliable indexing. Edited copies retain both, adding the known source
 capture instant's offset and milliseconds when an older source lacks an offset. This keeps calendar grouping stable
-after Android scans the new JPEG.
+after Android scans the new JPEG. AndroidX EXIF writes this metadata across supported Android versions; the framework's
+offset tag was [added in API 30](https://developer.android.com/reference/android/media/ExifInterface#TAG_OFFSET_TIME_ORIGINAL).
+When the media index has no capture date, the gallery reads EXIF before falling back to the date added.
+Legacy EXIF without an offset is interpreted in the device timezone; its original timezone cannot be recovered.
 
 Google's [night photography guide](https://support.google.com/pixelcamera/answer/9708795?hl=en) describes stable placement,
 far focus, start timers and optional astro time lapse. Its [video guide](https://support.google.com/pixelcamera/answer/7064897?hl=en)

@@ -4,7 +4,17 @@ All notable changes are recorded here. Each milestone lists **what works**, **wh
 real device**, and **known issues**. Format follows [Keep a Changelog](https://keepachangelog.com/);
 versions follow [Semantic Versioning](https://semver.org/).
 
-## [1.2.2] - 2026-10-07
+## [1.2.3] - 2026-10-07
+
+### Fixed
+- Edited older photos retain their original calendar date after Android rescans the JPEG. The editor writes
+  a capture-time offset and milliseconds using AndroidX EXIF for compatibility with Android 10. The gallery
+  also reads EXIF when the system media index has no capture date, including copies made by v1.2.1.
+- Includes the v1.2 gallery editing/delete/share tools, four Astro presets, Moon averaging, astro timelapse,
+  simplified settings and verified GitHub updater. Original photos remain untouched on Save copy.
+- Same persistent signing key as v1.1.2. See [validation](docs/VALIDATION-1.2.md) and [update notes](docs/UPDATES.md).
+
+## [1.2.2] - 2026-10-07 (unpublished candidate)
 
 ### Fixed
 - Edited older photos now carry an explicit capture-time offset and milliseconds when the source lacks
@@ -13,6 +23,8 @@ versions follow [Semantic Versioning](https://semver.org/).
 - Includes the gallery editor/delete/share tools, four sky presets, Moon averaging, astro timelapse,
   simpler settings, readable amber/red palettes and verified GitHub updates from v1.2.
 - Same persistent signing key as v1.1.2. See [validation](docs/VALIDATION-1.2.md) for upgrade evidence.
+- Publication was cancelled before an APK was released: the framework EXIF writer's offset tag requires
+  Android 11. The Android 10 compatible implementation is included in v1.2.3.
 
 ## [1.2.1] - 2026-10-07
 

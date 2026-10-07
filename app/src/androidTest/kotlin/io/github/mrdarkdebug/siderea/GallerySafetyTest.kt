@@ -182,4 +182,44 @@ class GallerySafetyTest {
             }
             assertTrue(sourceBytes.contentEquals(original.readBytes()))
         }
+
+    @Test fun legacyCopyWithoutIndexedDateUsesExifCaptureDate() =
+        runBlocking {
+            val taken = Instant.parse("2024-03-10T23:30:45.123Z")
+            val uri =
+                context.contentResolver.insert(
+                    MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                    ContentValues().apply {
+                        put(MediaStore.Images.Media.DISPLAY_NAME, "LEGACY_EDIT_TEST.jpg")
+                        put(MediaStore.Images.Media.MIME_TYPE, "image/jpeg")
+                        put(MediaStore.Images.Media.RELATIVE_PATH, "Pictures/Siderea/Edits")
+                        put(MediaStore.Images.Media.IS_PENDING, 1)
+                    },
+                )!!
+            owned += uri
+            val bitmap = Bitmap.createBitmap(4, 4, Bitmap.Config.ARGB_8888)
+            context.contentResolver.openOutputStream(uri)!!.use { bitmap.compress(Bitmap.CompressFormat.JPEG, 90, it) }
+            bitmap.recycle()
+            context.contentResolver.openFileDescriptor(uri, "rw")!!.use {
+                ExifInterface(it.fileDescriptor).apply {
+                    setAttribute(
+                        ExifInterface.TAG_DATETIME_ORIGINAL,
+                        taken.atZone(ZoneId.systemDefault()).format(DateTimeFormatter.ofPattern("yyyy:MM:dd HH:mm:ss")),
+                    )
+                    setAttribute(ExifInterface.TAG_SUBSEC_TIME_ORIG, "123")
+                    saveAttributes()
+                }
+            }
+            context.contentResolver.update(
+                uri,
+                ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) },
+                null,
+                null,
+            )
+            context.contentResolver.query(uri, arrayOf(MediaStore.Images.Media.DATE_TAKEN), null, null, null)!!.use {
+                assertTrue(it.moveToFirst())
+                assertTrue(it.isNull(0))
+            }
+            assertEquals(taken.toEpochMilli(), repository.list().first { it.name == "LEGACY_EDIT_TEST.jpg" }.capturedAt)
+        }
 }
